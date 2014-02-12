@@ -1,5 +1,7 @@
 open Str
 
+exception UnrecognizedTokenError
+
 let id_regex = Str.regexp "[a-zA-Z][a-zA-z0-9_]*"
 let char_regex = Str.regexp "[a-zA-Z]"
 let digit_regex = Str.regexp "[0-9]"
@@ -42,15 +44,8 @@ let tokenize word lineno = match word with
     | "false" -> T_false {lineno=lineno; value="false"}
     | "true" -> T_true {lineno=lineno; value="true"}
     | "+" -> T_plus {lineno=lineno; value="+"}
-    | str -> if Str.string_match id_regex str 0 then (T_id {lineno=lineno;
-    value=str})
-            else (
-                if Str.string_match char_regex str 0 then (T_char
-                {lineno=lineno; value=str})
-                else (
-                    if Str.string_match digit_regex str 0 then (T_digit
-                    {lineno=lineno; value=str})
-                    else raise Not_found
-                )
-            )
+    | str when Str.string_match id_regex str 0 -> T_id {lineno=lineno; value=str}
+    | str when Str.string_match char_regex str 0 -> T_char {lineno=lineno; value=str}
+    | str when Str.string_match digit_regex str 0 -> T_digit {lineno=lineno; value=str}
+    | _ -> raise UnrecognizedTokenError
 ;;
