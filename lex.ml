@@ -26,6 +26,12 @@ type token =
    | T_false of token_data
    | T_true of token_data
    | T_plus of token_data
+   | T_doublequote of token_data
+
+let rec join lst join_char = match lst with
+    | []  -> ""
+    | x::[]  -> x
+    | x::xs -> x ^ join_char ^ (join xs join_char)
 
 let tokenize word lineno = match word with
     | "{" -> T_OpenBrace {lineno=lineno; value="{"}
@@ -44,8 +50,11 @@ let tokenize word lineno = match word with
     | "false" -> T_false {lineno=lineno; value="false"}
     | "true" -> T_true {lineno=lineno; value="true"}
     | "+" -> T_plus {lineno=lineno; value="+"}
+    | "\"" -> T_doublequote {lineno=lineno; value="\""}
     | str when Str.string_match id_regex str 0 -> T_id {lineno=lineno; value=str}
     | str when Str.string_match char_regex str 0 -> T_char {lineno=lineno; value=str}
     | str when Str.string_match digit_regex str 0 -> T_digit {lineno=lineno; value=str}
     | _ -> raise UnrecognizedTokenError
 ;;
+
+let addSpaceToOccurrence str item = join (Str.split (Str.regexp item) str) (" " ^ item ^ " ")
