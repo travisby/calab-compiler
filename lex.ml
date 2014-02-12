@@ -52,7 +52,7 @@ let tokenize word lineno = match word with
     | "+" -> T_plus {lineno=lineno; value="+"}
     | "\"" -> T_doublequote {lineno=lineno; value="\""}
     | str when Str.string_match id_regex str 0 -> T_id {lineno=lineno; value=str}
-    | str when Str.string_match char_regex str 0 -> T_char {lineno=lineno; value=str}
+    (*| str when Str.string_match char_regex str 0 -> T_char {lineno=lineno; value=str} *)
     | str when Str.string_match digit_regex str 0 -> T_digit {lineno=lineno; value=str}
     | _ -> raise UnrecognizedTokenError
 ;;
