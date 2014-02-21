@@ -1,9 +1,9 @@
-exception UnrecognizedTokenError of int
+exception UnrecognizedTokenError of int;;
 
-let id_regex = Str.regexp "[a-zA-Z][a-zA-z0-9_]*"
-let char_regex = Str.regexp "[a-zA-Z]"
-let digit_regex = Str.regexp "[0-9]"
-type token_data = {lineno: int; value: string}
+let id_regex = Str.regexp "[a-zA-Z][a-zA-z0-9_]*";;
+let char_regex = Str.regexp "[a-zA-Z]";;
+let digit_regex = Str.regexp "[0-9]";;
+type token_data = {lineno: int; value: string};;
 type token =
    | T_OpenBrace of token_data
    | T_CloseBrace of token_data
@@ -25,11 +25,13 @@ type token =
    | T_true of token_data
    | T_plus of token_data
    | T_doublequote of token_data
+;;
 
 let rec join lst join_char = match lst with
     | []  -> ""
     | x::[]  -> x
     | x::xs -> x ^ join_char ^ (join xs join_char)
+;;
 
 let tokenize word lineno = match word with
     | "{" -> T_OpenBrace {lineno=lineno; value="{"}
@@ -55,4 +57,4 @@ let tokenize word lineno = match word with
     | _ -> raise (UnrecognizedTokenError lineno)
 ;;
 
-let addSpaceToOccurrence str item = join (Str.split (Str.regexp item) str) (" " ^ item ^ " ")
+let addSpaceToOccurrence str item = join (Str.split (Str.regexp item) str) (" " ^ item ^ " ");;
