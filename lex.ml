@@ -1,5 +1,3 @@
-open Str
-
 exception UnrecognizedTokenError of int
 
 let id_regex = Str.regexp "[a-zA-Z][a-zA-z0-9_]*"
