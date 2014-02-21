@@ -1,6 +1,6 @@
 open Str
 
-exception UnrecognizedTokenError
+exception UnrecognizedTokenError of int
 
 let id_regex = Str.regexp "[a-zA-Z][a-zA-z0-9_]*"
 let char_regex = Str.regexp "[a-zA-Z]"
@@ -54,7 +54,7 @@ let tokenize word lineno = match word with
     | str when Str.string_match id_regex str 0 -> T_id {lineno=lineno; value=str}
     (*| str when Str.string_match char_regex str 0 -> T_char {lineno=lineno; value=str} *)
     | str when Str.string_match digit_regex str 0 -> T_digit {lineno=lineno; value=str}
-    | _ -> raise UnrecognizedTokenError
+    | _ -> raise (UnrecognizedTokenError lineno)
 ;;
 
 let addSpaceToOccurrence str item = join (Str.split (Str.regexp item) str) (" " ^ item ^ " ")

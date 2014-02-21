@@ -1,1 +1,2 @@
+ocamlc lex.mli
 ocamlc str.cma lex.ml
