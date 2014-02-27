@@ -1,2 +1,3 @@
 ocamlc lex.mli
-ocamlc str.cma lex.ml
+ocamlc -a str.cma lex.ml -o lex.cma
+ocamlc lex.cma parse.ml
