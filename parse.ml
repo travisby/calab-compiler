@@ -51,3 +51,26 @@ and equals = | Equals
 and _while = | While
 and _if = | If
 and quote = Quote
+;;
+
+(* oop queue *)
+class ['a] queue (qu) =
+    object
+        (* note, this is actually mutable! *)
+        val mutable q = (qu : 'a)
+        method peek = List.hd q
+        (*
+         * So what's happening here is actually pretty cool
+         * let $x = $y in $z will return $y to the caller of $x, then calculate
+         * the () returnd $z
+         *)
+        method pop = let f = (List.hd q) in q <- (List.tl q); f
+        method get_list = q
+    end
+;;
+
+(* possible tokens... T_OpenBrace, T_CloseBrace, T_print, T_OpenParen,
+ * T_CloseParen, T_while, T_id, T_if, T_int, T_string, T_boolean, T_char,
+ * T_digit, T_assignment, T_equality, T_inequality, T_false, T_true, T_plus,
+ * T_doublequote
+ *)
