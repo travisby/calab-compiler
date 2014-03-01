@@ -3,6 +3,8 @@ exception UnrecognizedTokenError of int;;
 let id_regex = Str.regexp "[a-zA-Z][a-zA-z0-9_]*";;
 let char_regex = Str.regexp "[a-zA-Z]";;
 let digit_regex = Str.regexp "[0-9]";;
+let newline_regex = Str.regexp "\n";;
+
 type token_data = {lineno: int; value: string};;
 type token =
    | T_Open_Brace of token_data
@@ -57,4 +59,5 @@ let tokenize word lineno = match word with
     | _ -> raise (UnrecognizedTokenError lineno)
 ;;
 
+let split_on_newline str = Str.split newline_regex str
 let lex str = List.map (fun (x : string) -> tokenize x 0) (Str.split (Str.regexp " ") str)
