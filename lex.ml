@@ -27,6 +27,7 @@ type token =
    | T_True of token_data
    | T_Plus of token_data
    | T_Double_Quote of token_data
+   | T_Dollar_Sign of token_data
 ;;
 
 let rec join lst join_char = match lst with

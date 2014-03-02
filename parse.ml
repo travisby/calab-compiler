@@ -83,7 +83,10 @@ class ['a] queue (qu) =
  * non-terminals peek, terminals pop
  *)
 let rec parse tokens = parse_program (new queue tokens)
-and parse_program tokens = parse_block tokens
+and parse_program tokens =
+    let block = parse_block tokens in
+    let dollar_sign = parse_dollar_sign tokens in
+    Program (block, dollar_sign)
  (*
   * because we join with "and" and a previously recursive function, this is also recursive
   * We use the let .. in syntax to force order of evaluation.  OCaml makes
@@ -224,3 +227,6 @@ and parse_quote tokens = match (tokens#pop) with
 and parse_char_list tokens = match (tokens#pop) with
     | Lex.T_String x -> Char_List (x.value)
     | x -> raise (Expected_Something_Else("a string", x))
+and parse_dollar_sign tokens = match (tokens#pop) with
+    | Lex.T_Dollar_Sign _ -> Dollar_Sign
+    | x -> raise (Expected_Something_Else("dollar sign", x))
