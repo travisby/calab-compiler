@@ -2,4 +2,4 @@ level=trace
 filter=all
 layout=default
 output=file
-name=log
+name=/dev/stdout
