@@ -1,8 +1,6 @@
 exception Expected_Something_Else of string * Lex.token;;
 
-exception Expected_Something_Else of string * token;;
-
-type program = Program of block * dollarSign
+type program = Program of block * dollar_sign
 and block = Block of open_brace * statement_list * close_brace
 and statement_list =
     | Emtpy_Statement_List
@@ -45,7 +43,7 @@ and boolval =
     | True
 and intop =
     | Plus
-and dollarSign = | Dollar_Sign
+and dollar_sign = | Dollar_Sign
 and open_brace = | Open_Brace
 and close_brace = | Close_Brace
 and open_paren = | Open_Paren
