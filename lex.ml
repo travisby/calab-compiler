@@ -4,7 +4,6 @@ let id_regex = Str.regexp "[a-zA-Z][a-zA-z0-9_]*";;
 let char_regex = Str.regexp "[a-zA-Z]";;
 let digit_regex = Str.regexp "[0-9]";;
 let newline_regex = Str.regexp "\n";;
-let space_regex = Str.regexp " ";;
 
 type token_data = {lineno: int; value: string};;
 type token =
@@ -55,22 +54,11 @@ let tokenize word lineno = match word with
     | "true" -> T_True {lineno=lineno; value="true"}
     | "+" -> T_Plus {lineno=lineno; value="+"}
     | "\"" -> T_Double_Quote {lineno=lineno; value="\""}
-    | "$" -> T_Dollar_Sign {lineno=lineno; value="$"}
     | str when Str.string_match id_regex str 0 -> T_Id {lineno=lineno; value=str}
     (*| str when Str.string_match char_regex str 0 -> T_char {lineno=lineno; value=str} *)
     | str when Str.string_match digit_regex str 0 -> T_Digit {lineno=lineno; value=str}
     | _ -> raise (UnrecognizedTokenError lineno)
 ;;
 
-let split_on_newline str = Str.split newline_regex str;;
-let split_on_space str = Str.split space_regex str;;
-let lex str =
-    (* ["{"; "print ( 3 )"; "}"; "$"] *)
-    let list_of_strings_by_line = split_on_newline str in
-    (* [["{"]; ["print"; "("; "3"; ")";] ["}"]; ["$"]] *)
-    let list_of_lists_of_string_by_line_by_space = List.map (split_on_space) list_of_strings_by_line in
-    let apply_tokenize_for_a_line lineno lst = List.map (fun x -> tokenize x lineno) lst in
-    (* We use mapi because it actually uses the index as the first parameter *)
-    let apply_tokenize_to_all lst = List.mapi apply_tokenize_for_a_line list_of_lists_of_string_by_line_by_space in
-    List.flatten (apply_tokenize_to_all list_of_lists_of_string_by_line_by_space)
-;;
+let split_on_newline str = Str.split newline_regex str
+let lex str = List.map (fun (x : string) -> tokenize x 0) (Str.split (Str.regexp " ") str)
