@@ -1,4 +1,4 @@
-exception Expected_Something_Else of string * Lex.token;;
+open Lex;;
 
 type program = Program of block * dollar_sign
 and block = Block of open_brace * statement_list * close_brace
@@ -102,7 +102,7 @@ and parse_open_brace tokens = match tokens#pop with
     | Lex.T_Open_Brace _ -> Open_Brace
     | x -> raise (Expected_Something_Else("Open Brace", x))
 and parse_close_brace tokens = match tokens#pop with
-    | Lex.T_Close_Brace _ -> Close_Brace
+    | T_Close_Brace _ -> Close_Brace
     | x -> raise (Expected_Something_Else("Close Brace", x))
 
 (*
@@ -172,7 +172,7 @@ and parse_open_paren tokens = match tokens#pop with
     | x -> raise (Expected_Something_Else("Open Paren", x))
 and parse_expr tokens = match tokens#peek with
     | Lex.T_Digit _ -> Expr_Int_Expr (parse_int_expr tokens)
-    | Lex.T_Double_Quote _ -> Expr_String_Expr (parse_string_expr tokens)
+    | T_Double_Quote _ -> Expr_String_Expr (parse_string_expr tokens)
     | Lex.T_Id _ -> Expr_Id_Expr (parse_id tokens)
     | x -> raise (Expected_Something_Else("Digit | Quote | Id", x))
 and parse_close_paren tokens = match tokens#pop with
