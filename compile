@@ -1,3 +1,10 @@
-ocamlc -a str.cma lex.ml -o lex.cma
-ocamlc -a lex.cma parse.ml -o parse.cma
-ocamlc -a lex.cma parse.cma -o runner.cma
+ # directory to the logger library
+ BOLT_PATH=`ocamlfind query bolt`
+
+ # preprocess log directives
+ ocamlfind ocamlc -c -I $BOLT_PATH dynlink.cma unix.cma bolt.cma -pp "camlp4o `echo $BOLT_PATH`/bolt_pp.cmo" lex.ml
+ ocamlfind ocamlc -c -I $BOLT_PATH dynlink.cma unix.cma bolt.cma -pp "camlp4o `echo $BOLT_PATH`/bolt_pp.cmo" parse.ml
+ ocamlfind ocamlc -c -I $BOLT_PATH dynlink.cma unix.cma bolt.cma -pp "camlp4o `echo $BOLT_PATH`/bolt_pp.cmo" runner.ml
+
+ # compile
+ ocamlfind ocamlc -I $BOLT_PATH dynlink.cma unix.cma bolt.cma str.cma lex.cmo parse.cmo runner.cmo -o run
