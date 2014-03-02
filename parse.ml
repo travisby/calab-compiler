@@ -1,5 +1,7 @@
 open Lex;;
 
+exception Expected_Something_Else of string * Lex.token
+
 type program = Program of block * dollar_sign
 and block = Block of open_brace * statement_list * close_brace
 and statement_list =
