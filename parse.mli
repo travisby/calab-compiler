@@ -1,7 +1,4 @@
 exception Expected_Something_Else of string * Lex.token
-
-type symboltable =
-    | Empty_Symboltable
 type cst =
     | Program of cst * cst
     | Block of cst * cst * cst
@@ -45,4 +42,8 @@ type cst =
     | While
     | If
     | Quote
+type symboltable =
+    | Empty_Symboltable
+    | Scope of symboltable
+    | Table of (cst, string) Hashtbl.t (* the first being the data type *)
 val parse : Lex.token list -> cst
