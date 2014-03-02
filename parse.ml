@@ -2,6 +2,11 @@ open Lex;;
 
 exception Expected_Something_Else of string * Lex.token
 
+type symboltable =
+    | Empty_Symboltable
+    (* TODO the actual important stuff... *)
+;;
+
 type cst =
     | Program of cst * cst
     | Block of cst * cst * cst
@@ -221,3 +226,20 @@ and parse_char_list tokens = match (tokens#pop) with
 and parse_dollar_sign tokens = match (tokens#pop) with
     | T_Dollar_Sign _ -> Dollar_Sign
     | x -> raise (Expected_Something_Else("dollar sign", x))
+;;
+
+let merge_cst tree1 tree2 = tree1  (* TODO *)
+
+let rec symboltable_of_cst tree = match tree with
+    | Program (x, _) -> symboltable_of_cst x
+    | Block (_, x, _) -> symboltable_of_cst x (* TODO new scope *)
+    | Statement_List (x, y) -> merge_cst (symboltable_of_cst x) (symboltable_of_cst y)
+    | Statement_Var_Decl x -> symboltable_of_cst x
+    | Statement_While_Statement x -> symboltable_of_cst x
+    | Statement_If_Statement x -> symboltable_of_cst x
+    | Statement_Block x -> symboltable_of_cst x (* note, this will go into Block, so this does not need to add new scope *)
+    | Var_Decl (_type, name) -> Empty_Symboltable (* TODO Add to symbol table *)
+    | While_Statement (_, x) -> symboltable_of_cst x
+    | If_Statement (_, x) -> symboltable_of_cst x
+    | _ -> Empty_Symboltable
+;;

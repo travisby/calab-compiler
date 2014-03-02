@@ -1,4 +1,7 @@
 exception Expected_Something_Else of string * Lex.token
+
+type symboltable =
+    | Empty_Symboltable
 type cst =
     | Program of cst * cst
     | Block of cst * cst * cst
