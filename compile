@@ -4,9 +4,4 @@
  # preprocess log directives
  ocamlc -c lex.mli
  ocamlc -c parse.mli
- ocamlfind ocamlc -c -I $BOLT_PATH dynlink.cma unix.cma bolt.cma -pp "camlp4o `echo $BOLT_PATH`/bolt_pp.cmo" lex.ml
- ocamlfind ocamlc -c -I $BOLT_PATH dynlink.cma unix.cma bolt.cma -pp "camlp4o `echo $BOLT_PATH`/bolt_pp.cmo" parse.ml
- ocamlfind ocamlc -c -I $BOLT_PATH dynlink.cma unix.cma bolt.cma -pp "camlp4o `echo $BOLT_PATH`/bolt_pp.cmo" runner.ml
-
- # compile
- ocamlfind ocamlc -I $BOLT_PATH dynlink.cma unix.cma bolt.cma str.cma lex.cmo parse.cmo runner.cmo -o run
+ ocamlfind ocamlc -I $BOLT_PATH dynlink.cma unix.cma bolt.cma str.cma lex.ml parse.ml runner.ml -o run
