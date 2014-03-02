@@ -1,4 +1,4 @@
-exception UnrecognizedTokenError of int
+exception UnrecognizedTokenError of string * int
 type token_data = { lineno : int; value : string; }
 type token =
     T_Open_Brace of token_data

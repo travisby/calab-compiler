@@ -1,4 +1,4 @@
-exception UnrecognizedTokenError of int;;
+exception UnrecognizedTokenError of string * int;;
 
 let id_regex = Str.regexp "[a-zA-Z][a-zA-z0-9_]*";;
 let char_regex = Str.regexp "[a-zA-Z]";;
@@ -59,7 +59,7 @@ let tokenize word lineno = match word with
     | str when Str.string_match id_regex str 0 -> T_Id {lineno=lineno; value=str}
     (*| str when Str.string_match char_regex str 0 -> T_char {lineno=lineno; value=str} *)
     | str when Str.string_match digit_regex str 0 -> T_Digit {lineno=lineno; value=str}
-    | _ -> raise (UnrecognizedTokenError lineno)
+    | x -> raise (UnrecognizedTokenError (x, lineno))
 ;;
 
 let split_on_newline str = Str.split newline_regex str;;
@@ -72,5 +72,11 @@ let lex str =
     let apply_tokenize_for_a_line lineno lst = List.map (fun x -> tokenize x lineno) lst in
     (* We use mapi because it actually uses the index as the first parameter *)
     let apply_tokenize_to_all lst = List.mapi apply_tokenize_for_a_line list_of_lists_of_string_by_line_by_space in
-    List.flatten (apply_tokenize_to_all list_of_lists_of_string_by_line_by_space)
+    let tokens_by_line_by_word =
+        try apply_tokenize_to_all list_of_lists_of_string_by_line_by_space
+        with UnrecognizedTokenError(x, y) ->
+            Bolt.Logger.log "logger" Bolt.Level.ERROR ("Unrecognized token '"^ x ^ "' on line " ^ (string_of_int y)) ~file: "lex";
+            exit 1
+    in
+    List.flatten tokens_by_line_by_word
 ;;
