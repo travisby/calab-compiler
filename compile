@@ -1,3 +1,3 @@
-ocamlfind ocamlc -I +bolt -a str.cma lex.ml -o lex.cma
-ocamlfind ocamlc -I +bolt -a lex.cma parse.ml -o parse.cma
-ocamlfind ocamlc -I +bolt -a lex.cma parse.cma -o runner.cma
+ocamlc -a str.cma lex.ml -o lex.cma
+ocamlc -a lex.cma parse.ml -o parse.cma
+ocamlc -a lex.cma parse.cma -o runner.cma
