@@ -1,6 +1,7 @@
 open Lex;;
 
-exception Expected_Something_Else of string * Lex.token
+exception Expected_Something_Else of string * token;;
+exception Already_Exists_In_table;;
 
 type cst =
     | Program of cst * cst
@@ -47,10 +48,24 @@ type cst =
     | Quote
 ;;
 
+class ['a, 'b] table =
+    object (self)
+        val mutable t = Hashtbl.create 0
+        method private mem x = Hashtbl.mem t x
+        method get x = Hashtbl.find t x
+        method add (x:'a) (y:'b) =
+            if
+                self#mem x
+            then
+                raise Already_Exists_In_table
+            else
+                Hashtbl.add t x y
+    end
+;;
 type symboltable =
     | Empty_Symboltable
     | Scope of symboltable
-    | Table of (cst, string) Hashtbl.t (* the first being the data type *)
+    | Table of (string, string) table (* data type, varname *)
 ;;
 
 
