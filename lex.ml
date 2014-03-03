@@ -31,6 +31,9 @@ type token =
    | T_Dollar_Sign of token_data
 ;;
 
+let log_trace str = Bolt.Logger.log "logger" Bolt.Level.TRACE str ~file: "lex"
+let log_error str = Bolt.Logger.log "logger" Bolt.Level.ERROR str ~file: "lex"
+
 let rec join lst join_char = match lst with
     | []  -> ""
     | x::[]  -> x
@@ -39,67 +42,67 @@ let rec join lst join_char = match lst with
 
 let tokenize word lineno = match word with
     | "{" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found { token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found { token on line " ^ (string_of_int lineno));
             T_Open_Brace {lineno=lineno; value="{"}
     | "}" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found } token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found } token on line " ^ (string_of_int lineno));
             T_Close_Brace {lineno=lineno; value="}"}
     | "print" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found print token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found print token on line " ^ (string_of_int lineno));
             T_Print {lineno=lineno; value="print"}
     | "(" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found ( token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found ( token on line " ^ (string_of_int lineno));
             T_Open_Paren {lineno=lineno; value="("}
     | ")" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found ) token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found ) token on line " ^ (string_of_int lineno));
             T_Close_Paren {lineno=lineno; value=")"}
     | "while" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found while token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found while token on line " ^ (string_of_int lineno));
             T_While {lineno=lineno; value="while"}
     | "if" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found if token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found if token on line " ^ (string_of_int lineno));
             T_If {lineno=lineno; value="if"}
     | "int" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found int token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found int token on line " ^ (string_of_int lineno));
             T_Int {lineno=lineno; value="int"}
     | "string" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found string token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found string token on line " ^ (string_of_int lineno));
             T_String {lineno=lineno; value="string"}
     | "boolean" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found boolean token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found boolean token on line " ^ (string_of_int lineno));
             T_Boolean {lineno=lineno; value="boolean"}
     | "=" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found = token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found = token on line " ^ (string_of_int lineno));
             T_Assignment {lineno=lineno; value="="}
     | "==" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found == token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found == token on line " ^ (string_of_int lineno));
             T_Equality {lineno=lineno; value="=="}
     | "!=" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found != token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found != token on line " ^ (string_of_int lineno));
             T_Inequality {lineno=lineno; value="!="}
     | "false" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found false token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found false token on line " ^ (string_of_int lineno));
             T_False {lineno=lineno; value="false"}
     | "true" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found true token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found true token on line " ^ (string_of_int lineno));
             T_True {lineno=lineno; value="true"}
     | "+" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found + token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found + token on line " ^ (string_of_int lineno));
             T_Plus {lineno=lineno; value="+"}
     | "\"" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found \" token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found \" token on line " ^ (string_of_int lineno));
             T_Double_Quote {lineno=lineno; value="\""}
     | "$" ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found $ token on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found $ token on line " ^ (string_of_int lineno));
             T_Dollar_Sign {lineno=lineno; value="$"}
     | str when Str.string_match id_regex str 0 ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found id token" ^ str ^ "on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found id token" ^ str ^ "on line " ^ (string_of_int lineno));
             T_Id {lineno=lineno; value=str}
     | str when Str.string_match digit_regex str 0 ->
-            Bolt.Logger.log "logger" Bolt.Level.TRACE ("Found digit token" ^ str ^ "on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_trace ("Found digit token" ^ str ^ "on line " ^ (string_of_int lineno));
             T_Digit {lineno=lineno; value=str}
     | x -> 
-            Bolt.Logger.log "logger" Bolt.Level.ERROR ("Unrecognized token '"^ x ^ "' on line " ^ (string_of_int lineno)) ~file: "lex";
+            log_error ("Unrecognized token '"^ x ^ "' on line " ^ (string_of_int lineno));
             raise (UnrecognizedTokenError (x, lineno))
 ;;
 
