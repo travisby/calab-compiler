@@ -1,7 +1,15 @@
+(** Our Parser *)
+
+(** Exception to be raised when we got the wrong token.  The first parameter is
+ * what we expected, the second is what we got *)
 exception Expected_Something_Else of string * Lex.token
+(** Exception to be raised when a symbol already exists in our table *)
 exception Already_Exists_In_table
+(** General error TODO Replace *)
 exception CompilerError
+(** An exception to be raised when we try to exit the global scope *)
 exception CannotExitGlobalScope
+(** Our Concrete Syntax Tree *)
 type cst =
     Program of cst * cst
   | Block of cst * cst * cst
@@ -47,6 +55,7 @@ type cst =
   | While
   | If
   | Quote
+(** The individual symboltable for a particular level of scope *)
 class ['a, 'b] table :
   object
     val mutable t : ('a, 'b) Hashtbl.t
@@ -54,15 +63,22 @@ class ['a, 'b] table :
     method get : 'a -> 'b
     method private mem : 'a -> bool
   end
+(** The scope of our program for a symboltable *)
 type scope =
-    Global of (string, string) table * scope array
-    | Scope of (string, string) table * scope array * scope ref
+    Global of (string, string) table * scope array (** The Global scope for our
+    program.  Holds the global symbol table, and an array of children scopes *)
+    | Scope of (string, string) table * scope array * scope ref (** The internal
+    scope for our global scope.  Holds the local symbol table, an array of
+    children scopes, and its parent reference *)
+(** Our symbol table *)
 class symboltable :
   object
-    val mutable current_scope : scope ref
-    val mutable head : scope ref
-    method add : cst -> cst -> unit
-    method enter : unit
-    method exit : unit
+    val mutable current_scope : scope ref (** Reference to the scope we are
+    currently "in" *)
+    val mutable head : scope ref (** The global scope *)
+    method add : cst -> cst -> unit (** add element to the current scope *)
+    method enter : unit (** Enter a new scope *)
+    method exit : unit (** Exit into the parent scope *)
   end
-val parse : Lex.token list -> cst * symboltable
+val parse : Lex.token list -> cst * symboltable (** Create the Concrete Syntax
+Tree, and Symbol Table from a list of tokens *)
