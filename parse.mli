@@ -1,7 +1,9 @@
 exception Expected_Something_Else of string * Lex.token
 exception Already_Exists_In_table
+exception CompilerError
+exception CannotExitGlobalScope
 type cst =
-  | Program of cst * cst
+    Program of cst * cst
   | Block of cst * cst * cst
   | Emtpy_Statement_List
   | Statement_List of cst * cst
@@ -52,8 +54,15 @@ class ['a, 'b] table :
     method get : 'a -> 'b
     method private mem : 'a -> bool
   end
-type symboltable =
-    Empty_Symboltable
-  | Scope of symboltable
-  | Table of (string, string) table
-val parse : Lex.token list -> cst
+type scope =
+    Global of (string, string) table * scope array
+    | Scope of (string, string) table * scope array * scope ref
+class symboltable :
+  object
+    val mutable current_scope : scope ref
+    val mutable head : scope ref
+    method add : cst -> cst -> unit
+    method enter : unit
+    method exit : unit
+  end
+val parse : Lex.token list -> cst * symboltable

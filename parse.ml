@@ -2,6 +2,8 @@ open Lex;;
 
 exception Expected_Something_Else of string * token;;
 exception Already_Exists_In_table;;
+exception CompilerError;;
+exception CannotExitGlobalScope;;
 
 type cst =
     | Program of cst * cst
@@ -62,10 +64,50 @@ class ['a, 'b] table =
                 Hashtbl.add t x y
     end
 ;;
-type symboltable =
-    | Empty_Symboltable
-    | Scope of symboltable
-    | Table of (string, string) table (* data type, varname *)
+
+(*
+ * We use an array because it is a mutable data structure.
+ * We will be appending to the array to "add" new scopes
+ *)
+type scope =
+    | Global of (string, string) table * scope array
+    (* The last parameter is the parent scope *)
+    | Scope of (string, string) table * scope array * scope ref
+;;
+
+class symboltable =
+    (* A function that takes the unit () as its only parameter *)
+    let scope_constructor parent = Scope (new table, [||], parent) in
+    let scope_init = Global (new table, [||]) in
+    object
+        val mutable head = ref scope_init
+        val mutable current_scope = ref scope_init
+        method enter =
+            (*
+             * We seem (because we actually aren't) to be abusing let..in
+             * statements, but it enforces execution order for us, which is not
+             * guaranteed by the Ocaml language.  For all of the stuff depending
+             * on state (say... moving the scope pointer!) it's important to
+             * order the execution of statements
+             *)
+            let new_scope = ref (scope_constructor current_scope) in
+            let scope_array = match !current_scope with
+                | Scope (_, xs, _) -> xs
+                | Global (_, xs) -> xs
+            in
+            (* Add the new scope! *)
+            let _ = Array.append scope_array [|!new_scope|] in
+            let _ = current_scope <- new_scope in
+            ()
+        method exit =
+            let parent_scope = match !current_scope with
+                | Scope (_, _, x) -> x
+                | Global (_, _) -> raise CannotExitGlobalScope
+            in
+            let _ = current_scope <- parent_scope in
+            ()
+        method add (_:cst) (_:cst) = ()
+    end
 ;;
 
 
@@ -95,7 +137,12 @@ class ['a] queue (qu) =
 (*
  * non-terminals peek, terminals pop
  *)
-let rec parse tokens = parse_program (new queue tokens)
+let rec parse tokens =
+    let cst = parse_program (new queue tokens) in
+    let symboltable = new symboltable in
+    (* Make sure we do this before returning... *)
+    let _ = symboltable_of_cst ~st:symboltable cst in
+    (cst, symboltable)
 and parse_program tokens =
     let block = parse_block tokens in
     let dollar_sign = parse_dollar_sign tokens in
@@ -243,20 +290,43 @@ and parse_char_list tokens = match (tokens#pop) with
 and parse_dollar_sign tokens = match (tokens#pop) with
     | T_Dollar_Sign _ -> Dollar_Sign
     | x -> raise (Expected_Something_Else("dollar sign", x))
-;;
-
-let merge_cst tree1 tree2 = tree1  (* TODO *)
-
-let rec symboltable_of_cst tree = match tree with
-    | Program (x, _) -> symboltable_of_cst x
-    | Block (_, x, _) -> symboltable_of_cst x (* TODO new scope *)
-    | Statement_List (x, y) -> merge_cst (symboltable_of_cst x) (symboltable_of_cst y)
-    | Statement_Var_Decl x -> symboltable_of_cst x
-    | Statement_While_Statement x -> symboltable_of_cst x
-    | Statement_If_Statement x -> symboltable_of_cst x
-    | Statement_Block x -> symboltable_of_cst x (* note, this will go into Block, so this does not need to add new scope *)
-    | Var_Decl (_type, name) -> Empty_Symboltable (* TODO Add to symbol table *)
-    | While_Statement (_, x) -> symboltable_of_cst x
-    | If_Statement (_, x) -> symboltable_of_cst x
-    | _ -> Empty_Symboltable
+and symboltable_of_cst ?(st=new symboltable) tree  = match tree with
+    | Program (x, _) ->
+            let _ = symboltable_of_cst ~st x in
+            ()
+    | Block (_, x, _) ->
+            let _ = st#enter in
+            let _ = symboltable_of_cst ~st x in
+            let _ = st#exit in
+            ()
+    | Statement_List (x, y) ->
+            (*
+             * We don't care about the order of execution because we are
+             * modifying an object, not worrying about return values
+             *)
+            let _ = symboltable_of_cst ~st x in
+            let _ = symboltable_of_cst ~st y in
+            ()
+    | Statement_Var_Decl x ->
+            let _ = symboltable_of_cst ~st x in
+            ()
+    | Statement_While_Statement x ->
+            let _ = symboltable_of_cst ~st x in
+            ()
+    | Statement_If_Statement x ->
+            let _ = symboltable_of_cst ~st x in
+            ()
+    | Statement_Block x ->
+            let _ = symboltable_of_cst ~st x in
+            ()
+    | Var_Decl (_type, name) ->
+            let _ = st#add _type name in
+            ()
+    | While_Statement (_, x) ->
+            let _ = symboltable_of_cst ~st x in
+            ()
+    | If_Statement (_, x) ->
+            let _ = symboltable_of_cst ~st x in
+            ()
+    | _ -> ()
 ;;
