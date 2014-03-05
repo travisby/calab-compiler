@@ -34,12 +34,6 @@ type token =
 let log_trace str = Bolt.Logger.log "logger" Bolt.Level.TRACE str ~file: "lex"
 let log_error str = Bolt.Logger.log "logger" Bolt.Level.ERROR str ~file: "lex"
 
-let rec join lst join_char = match lst with
-    | []  -> ""
-    | x::[]  -> x
-    | x::xs -> x ^ join_char ^ (join xs join_char)
-;;
-
 let tokenize word lineno = match word with
     | "{" ->
             log_trace ("Found { token on line " ^ (string_of_int lineno));
