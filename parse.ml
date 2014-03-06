@@ -125,6 +125,7 @@ class ['a] queue (qu) =
          *)
         method pop = let f = (List.hd q) in q <- (List.tl q); f
         method get_list = q
+        method empty = List.length q == 0
     end
 ;;
 
@@ -135,6 +136,7 @@ class ['a] queue (qu) =
  *)
 
 let log_trace = Log.log_trace_func "parse";;
+let log_warn = Log.log_warn_func "parse";;
 let log_error = Log.log_error_func "parse";;
 
 (*
@@ -155,7 +157,24 @@ let rec parse tokens =
 and parse_program tokens =
     log_trace "Expecting Program";
     let block = parse_block tokens in
-    let dollar_sign = parse_dollar_sign tokens in
+    (*
+     * Because this is an expected, or "okay" case, we are better off using an
+     * if statement.  This is not an exceptional case
+     *)
+    let dollar_sign =
+        if
+            not tokens#empty
+        then
+            parse_dollar_sign tokens
+        (*
+         * Begin allows us to perform multiple statements where only one is
+         * expected
+         *)
+        else begin
+            log_warn "Missing $.  Adding for you!";
+            Dollar_Sign
+        end
+    in
     log_trace "Got Program!";
     Program (block, dollar_sign)
  (*
