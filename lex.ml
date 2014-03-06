@@ -113,3 +113,27 @@ let lex str =
     let tokens_by_line_by_word = apply_tokenize_to_all list_of_lists_of_string_by_line_by_space in
     List.flatten tokens_by_line_by_word
 ;;
+
+let token_as_string token = match token with
+    | T_Open_Brace x -> "" (* TODO *)
+    | T_Close_Brace x -> "" (* TODO *)
+    | T_Print x -> "" (* TODO *)
+    | T_Open_Paren x -> "" (* TODO *)
+    | T_Close_Paren x -> "" (* TODO *)
+    | T_While x -> "" (* TODO *)
+    | T_Id x -> "" (* TODO *)
+    | T_If x -> "" (* TODO *)
+    | T_Int x -> "" (* TODO *)
+    | T_String x -> "" (* TODO *)
+    | T_Boolean x -> "" (* TODO *)
+    | T_Char x -> "" (* TODO *)
+    | T_Digit x -> "" (* TODO *)
+    | T_Assignment x -> "" (* TODO *)
+    | T_Equality x -> "" (* TODO *)
+    | T_Inequality x -> "" (* TODO *)
+    | T_False x -> "" (* TODO *)
+    | T_True x -> "" (* TODO *)
+    | T_Plus x -> "" (* TODO *)
+    | T_Double_Quote x -> "" (* TODO *)
+    | T_Dollar_Sign x -> "" (* TODO *)
+;;

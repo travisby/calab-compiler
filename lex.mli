@@ -23,3 +23,4 @@ type token =
   | T_Double_Quote of token_data
   | T_Dollar_Sign of token_data
 val lex : string -> token list
+val token_as_string : token -> string
