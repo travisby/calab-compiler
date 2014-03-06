@@ -4,4 +4,4 @@
 ocamlc -c lex.mli
 ocamlc -c parse.mli
 ocamlc -c utils.mli
-ocamlfind ocamlc -I $BOLT_PATH dynlink.cma unix.cma bolt.cma str.cma lex.ml parse.ml utils.ml compiler.ml -o compiler
+ocamlfind ocamlc -I $BOLT_PATH dynlink.cma unix.cma bolt.cma log.ml str.cma lex.ml parse.ml utils.ml compiler.ml -o compiler

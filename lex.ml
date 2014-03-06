@@ -31,8 +31,8 @@ type token =
    | T_Dollar_Sign of token_data
 ;;
 
-let log_trace str = Bolt.Logger.log "logger" Bolt.Level.TRACE str ~file: "lex"
-let log_error str = Bolt.Logger.log "logger" Bolt.Level.ERROR str ~file: "lex"
+let log_trace = Log.log_trace_func "lex"
+let log_error = Log.log_error_func "lex"
 
 let tokenize word lineno = match word with
     | "{" ->
