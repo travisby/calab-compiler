@@ -135,16 +135,23 @@ class ['a] queue (qu) =
  *)
 
 let log_trace = Log.log_trace_func "parse";;
+let log_error = Log.log_error_func "parse";;
 
 (*
  * non-terminals peek, terminals pop
  *)
 let rec parse tokens =
-    let cst = parse_program (new queue tokens) in
-    let symboltable = new symboltable in
-    (* Make sure we do this before returning... *)
-    let _ = symboltable_of_cst ~st:symboltable cst in
-    (cst, symboltable)
+    try
+        let cst = parse_program (new queue tokens) in
+        let symboltable = new symboltable in
+        (* Make sure we do this before returning... *)
+        let _ = symboltable_of_cst ~st:symboltable cst in
+        (cst, symboltable)
+    with x -> match x with
+        | Expected_Something_Else (expected, actual) ->
+                log_error ("Expected " ^ expected ^ "but got " ^ (token_as_string actual));
+                raise x
+        | _ -> raise x
 and parse_program tokens =
     log_trace "Expecting Program";
     let block = parse_block tokens in
@@ -424,7 +431,7 @@ and symboltable_of_cst ?(st=new symboltable) tree  = match tree with
             let _ = symboltable_of_cst ~st x in
             ()
     | Var_Decl (_type, name) ->
-            let _ = st#add _type name in
+            let _ = st#add name _type in
             ()
     | While_Statement (_, x) ->
             let _ = symboltable_of_cst ~st x in
