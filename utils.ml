@@ -19,3 +19,21 @@ let file_name_to_string file_name =
         with End_of_file -> lst
     in
     join "\n" (get_by_line file)
+
+let odd x = x mod 2 = 0;;
+
+let rec get_odd_indexes ?isOdd:(isOdd=false) lst = match lst, isOdd with
+    | [], _ -> []
+    | x::xs, true -> x :: (get_odd_indexes ~isOdd:false xs)
+    | x::xs, false -> (get_odd_indexes ~isOdd:true xs)
+;;
+
+let queue_from_list lst =
+    let queue = Queue.create () in
+    let rec fill_queue lst = match lst with
+        | [] -> ()
+        | x::xs -> Queue.add x queue; fill_queue xs
+    in
+    fill_queue lst;
+    queue
+;;

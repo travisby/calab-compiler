@@ -25,7 +25,7 @@ type cst =
     | Expr_String_Expr of cst
     | Expr_Id_Expr of cst
     | Int_Expr of cst * cst * cst
-    | String_Expr of cst * cst * cst
+    | String_Expr of cst
     | Boolean_Expr of cst * cst * cst * cst * cst
     | Id of cst
     | Char_List of string
@@ -304,7 +304,7 @@ and parse_expr tokens =
     | T_Digit _ ->
             log_trace "Got expr!";
             Expr_Int_Expr (parse_int_expr tokens)
-    | T_Double_Quote _ ->
+    | T_Char_List _ ->
             log_trace "Got expr!";
             Expr_String_Expr (parse_string_expr tokens)
     | T_Id _ ->
@@ -363,11 +363,9 @@ and parse_int_expr tokens =
     Int_Expr (digit1, intop, digit2)
 and parse_string_expr tokens =
     log_trace "Expecting string expr (\"str\")";
-    let quote1 = parse_quote tokens in
     let char_list = parse_char_list tokens in
-    let quote2 = parse_quote tokens in
     log_trace "Got string expr!";
-    String_Expr (quote1, char_list, quote2)
+    String_Expr char_list
 and parse_char tokens =
     log_trace "Expecting character";
     match tokens#pop with 
@@ -399,19 +397,12 @@ and parse_intop tokens =
             log_trace "Got an intop (+)!";
             Plus
     | x -> raise (Expected_Something_Else("+", x))
-and parse_quote tokens =
-    log_trace "Expecting \"";
-    match (tokens#pop) with
-    | T_Double_Quote _ ->
-            log_trace "Got \"!";
-            Quote
-    | x -> raise (Expected_Something_Else("\"", x))
 and parse_char_list tokens =
     log_trace "Expecting character list";
     match (tokens#pop) with
-    | T_String x ->
+    | T_Char_List x ->
         log_trace "Got character list!";
-        Char_List (x.value)
+        Char_List x.value
     | x -> raise (Expected_Something_Else("a string", x))
 and parse_dollar_sign tokens =
     log_trace "Expecting $";

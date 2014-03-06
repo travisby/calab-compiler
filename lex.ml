@@ -1,10 +1,13 @@
 exception UnrecognizedTokenError of string * int;;
+exception CannotContainUnderscore;;
 
 let id_regex = Str.regexp "[a-zA-Z][a-zA-z0-9_]*";;
 let char_regex = Str.regexp "[a-zA-Z]";;
 let digit_regex = Str.regexp "[0-9]";;
 let newline_regex = Str.regexp "\n";;
+let whitespace_regex = Str.regexp "\\s+";;
 let space_regex = Str.regexp " ";;
+let quote_regex = Str.regexp "\"";;
 
 type token_data = {lineno: int; value: string};;
 type token =
@@ -18,6 +21,7 @@ type token =
    | T_If of token_data
    | T_Int of token_data
    | T_String of token_data
+   | T_Char_List of token_data
    | T_Boolean of token_data
    | T_Char of token_data
    | T_Digit of token_data
@@ -34,7 +38,7 @@ type token =
 let log_trace = Log.log_trace_func "lex"
 let log_error = Log.log_error_func "lex"
 
-let tokenize word lineno = match word with
+let tokenize strs lineno word = match word with
     | "{" ->
             log_trace ("Found { token on line " ^ (string_of_int lineno));
             T_Open_Brace {lineno=lineno; value="{"}
@@ -89,6 +93,9 @@ let tokenize word lineno = match word with
     | "$" ->
             log_trace ("Found $ token on line " ^ (string_of_int lineno));
             T_Dollar_Sign {lineno=lineno; value="$"}
+    | "_" ->
+            log_trace ("Found a charlist on line " ^ (string_of_int lineno));
+            T_Char_List {lineno=lineno; value=(Queue.pop strs)}
     | str when Str.string_match id_regex str 0 ->
             log_trace ("Found id token" ^ str ^ "on line " ^ (string_of_int lineno));
             T_Id {lineno=lineno; value=str}
@@ -102,38 +109,87 @@ let tokenize word lineno = match word with
 
 let split_on_newline str = Str.split newline_regex str;;
 let split_on_space str = Str.split space_regex str;;
+let split_on_quote str = Str.split quote_regex str;;
+
+let get_string_queue str =
+    (*
+     * Because our program must not begin with ", we can guarantee
+     * that every odd indexed element in our split list will be the contents of
+     * a string!
+     *
+     * e.g., { "hello alan" } would be split to... ["{", "hello alan", "}]
+     * We can just return every odd-indexed element, and rejoin
+     *)
+    let strings_by_quotes = split_on_quote str in
+    let strings_in_str = Utils.get_odd_indexes strings_by_quotes in
+    Utils.queue_from_list strings_in_str
+
+let replace_strings str = 
+    (*
+     * Using the same technique as for get_string_queue,
+     * We can isolate the strings, and replace them with an underscore,
+     * rebuild the string, and return
+     *)
+    let strings_by_quotes = split_on_quote str in
+    let strings_replaced = List.mapi (fun i x -> if Utils.odd i then x else "_") strings_by_quotes in
+    Utils.join " " strings_replaced
+
 let lex str =
-    (* ["{"; "print ( 3 )"; "}"; "$"] *)
-    let list_of_strings_by_line = split_on_newline str in
-    (* [["{"]; ["print"; "("; "3"; ")";] ["}"]; ["$"]] *)
-    let list_of_lists_of_string_by_line_by_space = List.map (split_on_space) list_of_strings_by_line in
-    let apply_tokenize_for_a_line lineno lst = List.map (fun x -> tokenize x lineno) lst in
-    (* We use mapi because it actually uses the index as the first parameter *)
-    let apply_tokenize_to_all lst = List.mapi apply_tokenize_for_a_line list_of_lists_of_string_by_line_by_space in
-    let tokens_by_line_by_word = apply_tokenize_to_all list_of_lists_of_string_by_line_by_space in
-    List.flatten tokens_by_line_by_word
+    (*
+     * Without the knowledge that we are within quotes at a given time,
+     * our tokenize function would be ambiguous.  We would not know whether
+     * the current characters are creating an id, or a charlist
+     *
+     * To prevent this we search the full string for quotes
+     * When we found a quote, we replace it with the _ character, 
+     * something that should not already exist in the user's program.
+     * We then place all of that replaced text into a queue strings_in_program
+     *
+     * The above gives us a state of always having a "one word" token to
+     * tokenize, allowing us to split on quotes
+     *
+     * We make sure that is passed into our tokenize function, so any time our
+     * keyword is found, we can then replace it with the value in the queue!
+     *)
+
+    (* ensure there is no _ already in the program *)
+    if String.contains str '_' then raise CannotContainUnderscore else ();
+
+    let remove_blanks_func = List.filter (fun x -> not (Str.string_match (Str.regexp "^$") x 0)) in
+    let tokenize_by_line_func lineno queue = List.map (fun x -> tokenize queue lineno x) in
+
+    let strings_in_program = get_string_queue str in
+    let string_replaced = replace_strings str in
+
+    let string_lines = Str.split newline_regex string_replaced in
+    let string_lines_words = List.map (Str.split space_regex) string_lines in
+    let trimmed = List.map (List.map String.trim) string_lines_words in
+    let filtered = List.map (remove_blanks_func) trimmed in
+    let token_lines = List.mapi (fun i -> tokenize_by_line_func  i strings_in_program) filtered in
+    List.flatten token_lines
 ;;
 
 let token_as_string token = match token with
-    | T_Open_Brace x -> "" (* TODO *)
-    | T_Close_Brace x -> "" (* TODO *)
-    | T_Print x -> "" (* TODO *)
-    | T_Open_Paren x -> "" (* TODO *)
-    | T_Close_Paren x -> "" (* TODO *)
-    | T_While x -> "" (* TODO *)
-    | T_Id x -> "" (* TODO *)
-    | T_If x -> "" (* TODO *)
-    | T_Int x -> "" (* TODO *)
-    | T_String x -> "" (* TODO *)
-    | T_Boolean x -> "" (* TODO *)
-    | T_Char x -> "" (* TODO *)
-    | T_Digit x -> "" (* TODO *)
-    | T_Assignment x -> "" (* TODO *)
-    | T_Equality x -> "" (* TODO *)
-    | T_Inequality x -> "" (* TODO *)
-    | T_False x -> "" (* TODO *)
-    | T_True x -> "" (* TODO *)
-    | T_Plus x -> "" (* TODO *)
-    | T_Double_Quote x -> "" (* TODO *)
-    | T_Dollar_Sign x -> "" (* TODO *)
+    | T_Open_Brace x -> "{" (* TODO *)
+    | T_Close_Brace x -> "}" (* TODO *)
+    | T_Print x -> "print" (* TODO *)
+    | T_Open_Paren x -> "(" (* TODO *)
+    | T_Close_Paren x -> ")" (* TODO *)
+    | T_While x -> "while" (* TODO *)
+    | T_Id x -> "id " ^ x.value (* TODO *)
+    | T_If x -> "if" (* TODO *)
+    | T_Int x -> "int" (* TODO *)
+    | T_String x -> "string" (* TODO *)
+    | T_Char_List x -> "char list" ^ x.value (* TODO *)
+    | T_Boolean x -> "boolean" (* TODO *)
+    | T_Char x -> "char " ^ x.value (* TODO *)
+    | T_Digit x -> "digit " ^ x.value (* TODO *)
+    | T_Assignment x -> "=" (* TODO *)
+    | T_Equality x -> "==" (* TODO *)
+    | T_Inequality x -> "!=" (* TODO *)
+    | T_False x -> "false" (* TODO *)
+    | T_True x -> "true" (* TODO *)
+    | T_Plus x -> "+" (* TODO *)
+    | T_Double_Quote x -> "\"" (* TODO *)
+    | T_Dollar_Sign x -> "$" (* TODO *)
 ;;
