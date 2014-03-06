@@ -423,8 +423,10 @@ and symboltable_of_cst ?(st=new symboltable) tree  = match tree with
             let _ = symboltable_of_cst ~st x in
             ()
     | Block (_, x, _) ->
+            log_trace "Entering new scope";
             let _ = st#enter in
             let _ = symboltable_of_cst ~st x in
+            log_trace "Exiting current scope";
             let _ = st#exit in
             ()
     | Statement_List (x, y) ->
@@ -448,6 +450,7 @@ and symboltable_of_cst ?(st=new symboltable) tree  = match tree with
             let _ = symboltable_of_cst ~st x in
             ()
     | Var_Decl (_type, name) ->
+            log_trace "Adding var to the symbol table";
             let _ = st#add name _type in
             ()
     | While_Statement (_, x) ->
