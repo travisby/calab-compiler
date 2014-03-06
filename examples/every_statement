@@ -2,7 +2,7 @@
     
     print ( " Hello, World! " )
     int x
-    x = 1
+    x = 1 + 0
     while ( x == 1) {
         x = 2
     }
