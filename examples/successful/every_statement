@@ -3,13 +3,13 @@
     print ( " Hello, World! " )
     int x
     x = 1 + 0
-    while ( x == 1) {
-        x = 2
+    while ( x == 1 + 0 ) {
+        x = 2 + 0
     }
 
-    if ( x != 2) {
+    if ( x != 2 + 0 ) {
         int y
-        y = 4
-        print ( 1 + y)
+        y = 4 + 0
+        print ( y )
     }
 } $
