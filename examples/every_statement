@@ -10,6 +10,6 @@
     if ( x != 2) {
         int y
         y = 4
-        print ( x + y)
+        print ( 1 + y)
     }
 } $
