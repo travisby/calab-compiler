@@ -1,0 +1,15 @@
+{
+    
+    print ( " Hello, World! " )
+    int x
+    x = 1
+    while ( x == 1) {
+        x = 2
+    }
+
+    if ( x != 2) {
+        int y
+        y = 4
+        print ( x + y)
+    }
+} $
