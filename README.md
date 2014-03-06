@@ -33,4 +33,4 @@ The log config file is optional; if one is not provided, no logging will take pl
 The default log provided will print to stdout
 
 
-$ BOLT_FILE=log_config ./compiler <file>
+$ BOLT_FILE=log_config ./compiler filename
