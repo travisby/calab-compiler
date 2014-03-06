@@ -33,7 +33,7 @@ type cst =
     | Int | String | Boolean
     | Char of char
     | Space
-    | Digit of int
+    | Digit of string
     | Equal
     | Not_Equal
     | False
@@ -395,7 +395,7 @@ and parse_digit tokens =
     match (tokens#pop) with
     | T_Digit x ->
             log_trace "Got a digit!";
-            Digit (int_of_string x.value)
+            Digit (x.value)
     | x -> raise (Expected_Something_Else("a number", x))
 and parse_intop tokens =
     log_trace "Expecting an intop (+)";

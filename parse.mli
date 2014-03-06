@@ -40,7 +40,7 @@ type cst =
   | Boolean
   | Char of char
   | Space
-  | Digit of int
+  | Digit of string
   | Equal
   | Not_Equal
   | False
