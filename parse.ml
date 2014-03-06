@@ -134,6 +134,8 @@ class ['a] queue (qu) =
  * T_doublequote
  *)
 
+let log_trace = Log.log_trace_func "parse";;
+
 (*
  * non-terminals peek, terminals pop
  *)
@@ -144,8 +146,10 @@ let rec parse tokens =
     let _ = symboltable_of_cst ~st:symboltable cst in
     (cst, symboltable)
 and parse_program tokens =
+    log_trace "Expecting Program";
     let block = parse_block tokens in
     let dollar_sign = parse_dollar_sign tokens in
+    log_trace "Got Program!";
     Program (block, dollar_sign)
  (*
   * because we join with "and" and a previously recursive function, this is also recursive
@@ -154,31 +158,45 @@ and parse_program tokens =
     http://caml.inria.fr/pub/docs/oreilly-book/html/book-ora029.html 
   *)
 and parse_block tokens =
+    log_trace "Expecting Block";
     (* these are analogous to local variables *)
     let ob = parse_open_brace tokens in
     let statement_list = parse_statement_list tokens in
     let cb = parse_close_brace tokens in
     (* this is the return value *)
+    log_trace "Got Block!";
     Block (ob, statement_list, cb)
-and parse_open_brace tokens = match tokens#pop with
-    | T_Open_Brace _ -> Open_Brace
+and parse_open_brace tokens =
+    log_trace "Expecting {";
+    match tokens#pop with
+    | T_Open_Brace _ ->
+            log_trace "Got {!";
+            Open_Brace
     | x -> raise (Expected_Something_Else("Open Brace", x))
-and parse_close_brace tokens = match tokens#pop with
-    | T_Close_Brace _ -> Close_Brace
+and parse_close_brace tokens =
+    log_trace "Expecting }";
+    match tokens#pop with
+    | T_Close_Brace _ ->
+            log_trace "Got }!";
+            Close_Brace
     | x -> raise (Expected_Something_Else("Close Brace", x))
 
 (*
  * We must assume the parse_statement into this function, or else we wouldn't
  * know whether to issue an empty statement list, or an unexpected token error
  *)
-and parse_statement_list tokens = match tokens#peek with
+and parse_statement_list tokens =
+    log_trace "Expecting statement list (Print|Id|Type|While|If|Block and statement list, OR nothing";
+    match tokens#peek with
     | T_Print x ->
             let print_statement = parse_print_statement tokens in
             let statement_list = parse_statement_list tokens in
+            log_trace "Got statement list!";
             Statement_List (Statement_Print_Statement (print_statement), statement_list)
     | T_Id x ->
             let assignment_statement = parse_assignment_statement tokens in
             let statement_list = parse_statement_list tokens in
+            log_trace "Got statement list!";
             Statement_List (Statement_Assignment_Statement (assignment_statement), statement_list)
     (*
     | T_Int x -> Statement_List (Statement_Var_Decl (parse_var_decl_statement tokens), parse_statement_list tokens)
@@ -188,107 +206,193 @@ and parse_statement_list tokens = match tokens#peek with
     | T_While x ->
             let while_statement = parse_while_statement tokens in
             let statement_list = parse_statement_list tokens in
+            log_trace "Got statement list!";
             Statement_List (Statement_While_Statement (while_statement), statement_list)
     | T_If x ->
             let if_statement = parse_if_statement tokens in
             let statement_list = parse_statement_list tokens in
+            log_trace "Got statement list!";
             Statement_List (Statement_If_Statement (if_statement), statement_list)
     | T_Open_Brace x ->
             let block = parse_block tokens in
             let statement_list = parse_statement_list tokens in
+            log_trace "Got statement list!";
             Statement_List (Statement_Block (block), statement_list)
-    | _ -> Emtpy_Statement_List
-and parse_print_statement tokens = match tokens#pop with
+    | _ -> 
+            log_trace "Got empty statement list!";
+            Emtpy_Statement_List
+and parse_print_statement tokens =
+    log_trace "Expecting print";
+    match tokens#pop with
     | T_Print _ ->
             let op = parse_open_paren tokens in
             let expr = parse_expr tokens in
             let cp = parse_close_paren tokens in
+            log_trace "Got print!";
             Print_Statement (op, expr, cp)
     | x -> raise (Expected_Something_Else("Print", x))
 and parse_assignment_statement tokens = 
+    log_trace "Expecting assignment statement (id = val)";
     (* remember, id is already used as a type! *)
     let _id = parse_id tokens in
     let equals = parse_equals tokens in
     let expr = parse_expr tokens in
+    log_trace "Got assignment statement!";
     Assignment_Statement (_id, equals, expr)
 and parse_var_decl_statement tokens =
+    log_trace "Expecting variable declaration (<type> <name>)";
     (* remember, type is a reserved word, and _type  is already used as a type! *)
     let the_type = parse_type tokens in
     (* remember, id is already used as a type! *)
     let _id = parse_id tokens in
+    log_trace "Got variable declaration!";
     Var_Decl (the_type, _id)
-and parse_while_statement tokens = match tokens#pop with
+and parse_while_statement tokens =
+    log_trace "Expecting while Statement (while block)";
+    match tokens#pop with
     | T_While _ ->
             let boolean_expr = parse_boolean_expr tokens in
             let block = parse_block tokens in
+            log_trace "Got while statement!";
             While_Statement (boolean_expr, block)
     | x -> raise (Expected_Something_Else("While", x))
-and parse_if_statement tokens = match tokens#pop with
+and parse_if_statement tokens =
+    log_trace "Expecting if statement (if block)";
+    match tokens#pop with
     | T_If _ ->
             let boolean_expr = parse_boolean_expr tokens in
             let block = parse_block tokens in
+            log_trace "Got if statement!";
             If_Statement (boolean_expr, block)
     | x -> raise (Expected_Something_Else("If", x))
-and parse_open_paren tokens = match tokens#pop with
-    | T_Open_Paren _ -> Open_Paren
+and parse_open_paren tokens =
+    log_trace "Expecting (";
+    match tokens#pop with
+    | T_Open_Paren _ ->
+            log_trace "Got (!";
+            Open_Paren
     | x -> raise (Expected_Something_Else("Open Paren", x))
-and parse_expr tokens = match tokens#peek with
-    | T_Digit _ -> Expr_Int_Expr (parse_int_expr tokens)
-    | T_Double_Quote _ -> Expr_String_Expr (parse_string_expr tokens)
-    | T_Id _ -> Expr_Id_Expr (parse_id tokens)
+and parse_expr tokens =
+    log_trace "Expecting expr (int expr | string expr | id)";
+    match tokens#peek with
+    | T_Digit _ ->
+            log_trace "Got expr!";
+            Expr_Int_Expr (parse_int_expr tokens)
+    | T_Double_Quote _ ->
+            log_trace "Got expr!";
+            Expr_String_Expr (parse_string_expr tokens)
+    | T_Id _ ->
+            log_trace "Got expr!";
+            Expr_Id_Expr (parse_id tokens)
     | x -> raise (Expected_Something_Else("Digit | Quote | Id", x))
-and parse_close_paren tokens = match tokens#pop with
-    | T_Close_Paren _ -> Close_Paren
+and parse_close_paren tokens =
+    log_trace "Expecting )";
+    match tokens#pop with
+    | T_Close_Paren _ ->
+            log_trace "Got )!";
+            Close_Paren
     | x -> raise (Expected_Something_Else("Close Paren", x))
-and parse_id tokens = match tokens#peek with 
-    | T_Id x -> Id (parse_char tokens)
+and parse_id tokens =
+    log_trace "Expecting <id>";
+    match tokens#peek with 
+    | T_Id x ->
+            log_trace "Got <id>!";
+            Id (parse_char tokens)
     | x -> raise (Expected_Something_Else("Id", x))
-and parse_equals tokens = match tokens#pop with
-    | T_Assignment _ -> Equals
+and parse_equals tokens =
+    log_trace "Expecting =";
+    match tokens#pop with
+    | T_Assignment _ ->
+            log_trace "Got =!";
+            Equals
     | x -> raise (Expected_Something_Else("=", x))
-and parse_type tokens = match tokens#pop with
-    | T_Int _ -> Int
-    | T_Boolean _ -> Boolean
-    | T_String _ -> String
+and parse_type tokens =
+    log_trace "Expecting type (int | boolean | string)";
+    match tokens#pop with
+    | T_Int _ ->
+            log_trace "Got type (int)!";
+            Int
+    | T_Boolean _ ->
+            log_trace "Got type (boolean)!";
+            Boolean
+    | T_String _ ->
+            log_trace "Got type (string)!";
+            String
     | x -> raise (Expected_Something_Else("int | boolean | string", x))
 and parse_boolean_expr tokens =
+    log_trace "Expecting boolean expr ( ( expr boolop expr ) )";
     let op = parse_open_paren tokens in
     let expr1 = parse_expr tokens in
     let boolop = parse_boolop tokens in
     let expr2 = parse_expr tokens in
     let cp = parse_close_paren tokens in
+    log_trace "Got boolean expr!";
     Boolean_Expr (op, expr1, boolop, expr2, cp)
 and parse_int_expr tokens =
+    log_trace "Expecting int expr (num intop num)";
     let digit1 = parse_digit tokens in
     let intop = parse_intop tokens in
     let digit2 = parse_digit tokens in
+    log_trace "Got int expr!";
     Int_Expr (digit1, intop, digit2)
 and parse_string_expr tokens =
+    log_trace "Expecting string expr (\"str\")";
     let quote1 = parse_quote tokens in
     let char_list = parse_char_list tokens in
     let quote2 = parse_quote tokens in
+    log_trace "Got string expr!";
     String_Expr (quote1, char_list, quote2)
-and parse_char tokens = match tokens#pop with 
-    | T_Char x -> Char (String.get x.value 0)
+and parse_char tokens =
+    log_trace "Expecting character";
+    match tokens#pop with 
+    | T_Char x ->
+            log_trace "Got character!";
+            Char (String.get x.value 0)
     | x -> raise (Expected_Something_Else("a character", x))
-and parse_boolop tokens = match (tokens#pop) with
-    | T_Equality _ -> Equal
-    | T_Inequality _ -> Not_Equal
+and parse_boolop tokens =
+    log_trace "Expecting boolop (==, !=)";
+    match (tokens#pop) with
+    | T_Equality _ ->
+            log_trace "Got boolop(==)!";
+            Equal
+    | T_Inequality _ ->
+            log_trace "Got boolop(!=)!";
+            Not_Equal
     | x -> raise (Expected_Something_Else("== | !=", x))
-and parse_digit tokens = match (tokens#pop) with
-    | T_Digit x -> Digit (int_of_string x.value)
+and parse_digit tokens =
+    log_trace "Expecting a digit";
+    match (tokens#pop) with
+    | T_Digit x ->
+            log_trace "Got a digit!";
+            Digit (int_of_string x.value)
     | x -> raise (Expected_Something_Else("a number", x))
-and parse_intop tokens = match (tokens#pop) with
-    | T_Plus _ -> Plus
+and parse_intop tokens =
+    log_trace "Expecting an intop (+)";
+    match (tokens#pop) with
+    | T_Plus _ ->
+            log_trace "Got an intop (+)!";
+            Plus
     | x -> raise (Expected_Something_Else("+", x))
-and parse_quote tokens = match (tokens#pop) with
-    | T_Double_Quote _ -> Quote
+and parse_quote tokens =
+    log_trace "Expecting \"";
+    match (tokens#pop) with
+    | T_Double_Quote _ ->
+            log_trace "Got \"!";
+            Quote
     | x -> raise (Expected_Something_Else("\"", x))
-and parse_char_list tokens = match (tokens#pop) with
-    | T_String x -> Char_List (x.value)
+and parse_char_list tokens =
+    log_trace "Expecting character list";
+    match (tokens#pop) with
+    | T_String x ->
+        log_trace "Got character list!";
+        Char_List (x.value)
     | x -> raise (Expected_Something_Else("a string", x))
-and parse_dollar_sign tokens = match (tokens#pop) with
-    | T_Dollar_Sign _ -> Dollar_Sign
+and parse_dollar_sign tokens =
+    log_trace "Expecting $";
+    match (tokens#pop) with
+    | T_Dollar_Sign _ ->
+            log_trace "Got $!";
+            Dollar_Sign
     | x -> raise (Expected_Something_Else("dollar sign", x))
 and symboltable_of_cst ?(st=new symboltable) tree  = match tree with
     | Program (x, _) ->
