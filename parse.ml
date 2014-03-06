@@ -27,7 +27,7 @@ type cst =
     | Int_Expr of cst * cst * cst
     | String_Expr of cst
     | Boolean_Expr of cst * cst * cst * cst * cst
-    | Id of cst
+    | Id of string
     | Char_List of string
     | Empty_Char_List
     | Int | String | Boolean
@@ -151,7 +151,7 @@ let rec parse tokens =
         (cst, symboltable)
     with x -> match x with
         | Expected_Something_Else (expected, actual) ->
-                log_error ("Expected " ^ expected ^ "but got " ^ (token_as_string actual));
+                log_error ("Expected " ^ expected ^ " but got " ^ (token_as_string actual));
                 raise x
         | _ -> raise x
 and parse_program tokens =
@@ -224,11 +224,18 @@ and parse_statement_list tokens =
             let statement_list = parse_statement_list tokens in
             log_trace "Got statement list!";
             Statement_List (Statement_Assignment_Statement (assignment_statement), statement_list)
-    (*
-    | T_Int x -> Statement_List (Statement_Var_Decl (parse_var_decl_statement tokens), parse_statement_list tokens)
-    | T_String x -> Statement_List (Statement_Var_Decl (parse_var_decl_statement tokens), parse_statement_list tokens)
-    | T_Boolean x -> Statement_List (Statement_Var_Decl (parse_var_decl_statement tokens), parse_statement_list tokens)
-    *)
+    | T_Int x ->
+            let var_declstatement = parse_var_decl_statement tokens in
+            let statement_list = parse_statement_list tokens in
+            Statement_List (Statement_Var_Decl (var_declstatement), statement_list)
+    | T_String x ->
+            let var_declstatement = parse_var_decl_statement tokens in
+            let statement_list = parse_statement_list tokens in
+            Statement_List (Statement_Var_Decl (var_declstatement), statement_list)
+    | T_Boolean x ->
+            let var_declstatement = parse_var_decl_statement tokens in
+            let statement_list = parse_statement_list tokens in
+            Statement_List (Statement_Var_Decl (var_declstatement), statement_list)
     | T_While x ->
             let while_statement = parse_while_statement tokens in
             let statement_list = parse_statement_list tokens in
@@ -320,10 +327,10 @@ and parse_close_paren tokens =
     | x -> raise (Expected_Something_Else("Close Paren", x))
 and parse_id tokens =
     log_trace "Expecting <id>";
-    match tokens#peek with 
+    match tokens#pop with 
     | T_Id x ->
             log_trace "Got <id>!";
-            Id (parse_char tokens)
+            Id (x.value)
     | x -> raise (Expected_Something_Else("Id", x))
 and parse_equals tokens =
     log_trace "Expecting =";
