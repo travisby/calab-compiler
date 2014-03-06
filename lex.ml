@@ -170,26 +170,26 @@ let lex str =
 ;;
 
 let token_as_string token = match token with
-    | T_Open_Brace x -> "{" (* TODO *)
-    | T_Close_Brace x -> "}" (* TODO *)
-    | T_Print x -> "print" (* TODO *)
-    | T_Open_Paren x -> "(" (* TODO *)
-    | T_Close_Paren x -> ")" (* TODO *)
-    | T_While x -> "while" (* TODO *)
-    | T_Id x -> "id " ^ x.value (* TODO *)
-    | T_If x -> "if" (* TODO *)
-    | T_Int x -> "int" (* TODO *)
-    | T_String x -> "string" (* TODO *)
-    | T_Char_List x -> "char list" ^ x.value (* TODO *)
-    | T_Boolean x -> "boolean" (* TODO *)
-    | T_Char x -> "char " ^ x.value (* TODO *)
-    | T_Digit x -> "digit " ^ x.value (* TODO *)
-    | T_Assignment x -> "=" (* TODO *)
-    | T_Equality x -> "==" (* TODO *)
-    | T_Inequality x -> "!=" (* TODO *)
-    | T_False x -> "false" (* TODO *)
-    | T_True x -> "true" (* TODO *)
-    | T_Plus x -> "+" (* TODO *)
-    | T_Double_Quote x -> "\"" (* TODO *)
-    | T_Dollar_Sign x -> "$" (* TODO *)
+    | T_Open_Brace x -> "{"
+    | T_Close_Brace x -> "}"
+    | T_Print x -> "print"
+    | T_Open_Paren x ->  "("
+    | T_Close_Paren x -> ")"
+    | T_While x -> "while"
+    | T_Id x -> "id " ^ x.value
+    | T_If x -> "if"
+    | T_Int x -> "int"
+    | T_String x -> "string"
+    | T_Char_List x -> "char list" ^ x.value
+    | T_Boolean x -> "boolean"
+    | T_Char x -> "char " ^ x.value
+    | T_Digit x -> "digit " ^ x.value
+    | T_Assignment x -> "="
+    | T_Equality x -> "=="
+    | T_Inequality x -> "!="
+    | T_False x -> "false"
+    | T_True x -> "true"
+    | T_Plus x -> "+"
+    | T_Double_Quote x -> "\""
+    | T_Dollar_Sign x -> "$"
 ;;
