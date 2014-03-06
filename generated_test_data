@@ -1,0 +1,24 @@
+EXPECTING TO error
+test:  no_braces
+Warn Count:  0
+Error Count:  1
+EXPECTING TO successful
+test:  every_statement
+Warn Count:  0
+Error Count:  1
+test:  most_simple_program
+Warn Count:  0
+Error Count:  0
+test:  simple_assignment
+Warn Count:  0
+Error Count:  0
+test:  simple_string
+Warn Count:  0
+Error Count:  0
+test:  spaced_string
+Warn Count:  0
+Error Count:  0
+EXPECTING TO warn
+test:  dollar_sign_missing
+Warn Count:  1
+Error Count:  0
