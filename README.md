@@ -36,3 +36,14 @@ The default log provided will print to stdout
 
 
 $ BOLT_FILE=log_config ./compiler filename
+
+Tests
+-----
+To run our test suite, simply build the application,
+and from the project root directory:
+
+
+$ ./test
+
+
+It will print some fun output on the errors and warnings for each test case
