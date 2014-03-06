@@ -10,6 +10,8 @@ To install our dependencies, you need only:
 
 $ opam install bolt
 
+Logging
+-------
 Bolt is our Logger utility.  You can see its configuration examples here: http://bolt.x9c.fr/manual.html
 
 
