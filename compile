@@ -1,7 +1,7 @@
  # directory to the logger library
  BOLT_PATH=`ocamlfind query bolt`
 
+ocamlc -c utils.mli
 ocamlc -c lex.mli
 ocamlc -c parse.mli
-ocamlc -c utils.mli
-ocamlfind ocamlc -I $BOLT_PATH dynlink.cma unix.cma bolt.cma log.ml str.cma lex.ml parse.ml utils.ml compiler.ml -o compiler -g
+ocamlfind ocamlc -I $BOLT_PATH dynlink.cma unix.cma bolt.cma log.ml str.cma utils.ml lex.ml parse.ml compiler.ml -o compiler -g
