@@ -154,14 +154,16 @@ let lex str =
 
     (* ensure there is no _ already in the program *)
     if String.contains str '_' then raise CannotContainUnderscore else ();
-
+    let my_reg = Str.regexp "==\\|=\\|[(){}$\"]" in
+    let add_spaces_func str = (Str.global_replace my_reg " \\0 " str) in
     let remove_blanks_func = List.filter (fun x -> not (Str.string_match (Str.regexp "^$") x 0)) in
     let tokenize_by_line_func lineno queue = List.map (fun x -> tokenize queue lineno x) in
 
     let strings_in_program = get_string_queue str in
     let string_replaced = replace_strings str in
 
-    let string_lines = Str.split newline_regex string_replaced in
+    let my_str = add_spaces_func string_replaced in
+    let string_lines = Str.split newline_regex my_str in
     let string_lines_words = List.map (Str.split space_regex) string_lines in
     let trimmed = List.map (List.map String.trim) string_lines_words in
     let filtered = List.map (remove_blanks_func) trimmed in
