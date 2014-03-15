@@ -176,6 +176,10 @@ and parse_program tokens =
         end
     in
     log_trace "Got Program!";
+    if
+        not tokens#empty
+    then
+        log_warn "Extra text after $.  Ignoring it";
     Program (block, dollar_sign)
  (*
   * because we join with "and" and a previously recursive function, this is also recursive
