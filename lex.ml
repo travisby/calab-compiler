@@ -1,7 +1,5 @@
 exception UnrecognizedTokenError of string * int;;
-exception UnrecognizedTokenInStringError of string;;
 exception CannotContainUnderscoreError;;
-
 let id_regex = Str.regexp "[a-z]";;
 let char_regex = Str.regexp "[a-zA-Z]";;
 let digit_regex = Str.regexp "[0-9]";;
@@ -133,13 +131,7 @@ let replace_strings str =
      *)
     let strings_by_quotes = split_on_quote str in
     let strings_replaced = List.mapi (fun i x -> if Utils.odd i then x else "_") strings_by_quotes in
-    if
-        (Str.string_match (Str.regexp "[^a-z ]") str 0)
-    then
-        raise (UnrecognizedTokenInString (Str.matched_string str))
-    else
-        Utils.join " " strings_replaced
-
+    Utils.join " " strings_replaced
 
 let lex str =
     (*
@@ -160,7 +152,7 @@ let lex str =
      *)
 
     (* ensure there is no _ already in the program *)
-    if String.contains str '_' then raise CannotContainUnderscore else ();
+    if String.contains str '_' then raise CannotContainUnderscoreError else ();
     let my_reg = Str.regexp "==\\|=\\|[(){}$\"\\|\\+]" in
     let add_spaces_func str = (Str.global_replace my_reg " \\0 " str) in
     let remove_blanks_func = List.filter (fun x -> not (Str.string_match (Str.regexp "^$") x 0)) in

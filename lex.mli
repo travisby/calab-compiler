@@ -1,5 +1,5 @@
 exception UnrecognizedTokenError of string * int
-exception CannotContainUnderscore
+exception CannotContainUnderscoreError
 type token_data = { lineno : int; value : string; }
 type token =
     T_Open_Brace of token_data
