@@ -1,6 +1,6 @@
 exception UnrecognizedTokenError of string * int;;
-exception UnrecognizedTokenInString of string;;
-exception CannotContainUnderscore;;
+exception UnrecognizedTokenInStringError of string;;
+exception CannotContainUnderscoreError;;
 
 let id_regex = Str.regexp "[a-z]";;
 let char_regex = Str.regexp "[a-zA-Z]";;
