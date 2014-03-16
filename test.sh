@@ -1,5 +1,6 @@
 for expected in `ls examples/`
 do
+    echo '-------------------------------';
     echo EXPECTING TO $expected;
     for file in `ls examples/$expected`
     do
