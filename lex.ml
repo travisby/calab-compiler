@@ -1,4 +1,5 @@
 exception UnrecognizedTokenError of string * int;;
+exception UnrecognizedTokenInString of string;;
 exception CannotContainUnderscore;;
 
 let id_regex = Str.regexp "[a-z]";;
@@ -132,7 +133,13 @@ let replace_strings str =
      *)
     let strings_by_quotes = split_on_quote str in
     let strings_replaced = List.mapi (fun i x -> if Utils.odd i then x else "_") strings_by_quotes in
-    Utils.join " " strings_replaced
+    if
+        (Str.string_match (Str.regexp "[^a-z ]") str 0)
+    then
+        raise (UnrecognizedTokenInString (Str.matched_string str))
+    else
+        Utils.join " " strings_replaced
+
 
 let lex str =
     (*
