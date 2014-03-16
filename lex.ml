@@ -1,7 +1,7 @@
 exception UnrecognizedTokenError of string * int;;
 exception CannotContainUnderscore;;
 
-let id_regex = Str.regexp "[a-zA-Z][a-zA-z0-9_]*";;
+let id_regex = Str.regexp "[a-z]";;
 let char_regex = Str.regexp "[a-zA-Z]";;
 let digit_regex = Str.regexp "[0-9]";;
 let newline_regex = Str.regexp "\n";;
