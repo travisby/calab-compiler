@@ -165,7 +165,14 @@ let lex str =
      *)
 
     (* ensure there is no _ already in the program *)
-    if String.contains str '_' then raise CannotContainUnderscoreError else ();
+    if
+        String.contains str '_'
+    then
+        begin
+            log_error "Your program cannot contain an underscore anywhere";
+            raise CannotContainUnderscoreError
+        end
+    else ();
     let my_reg = Str.regexp "==\\|!=\\|=\\|[(){}$\"\\|\\+]" in
     let add_spaces_func str = (Str.global_replace my_reg " \\0 " str) in
     let remove_blanks_func = List.filter (fun x -> not (Str.string_match (Str.regexp "^$") x 0)) in
