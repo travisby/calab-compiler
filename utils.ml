@@ -20,7 +20,7 @@ let file_name_to_string file_name =
     in
     join "\n" (get_by_line file)
 
-let odd x = x mod 2 = 0;;
+let odd x = x mod 2 <> 0;;
 
 let rec get_odd_indexes ?isOdd:(isOdd=false) lst = match lst, isOdd with
     | [], _ -> []
