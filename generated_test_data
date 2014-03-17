@@ -22,7 +22,7 @@ test:  multiple_line_literals
 Warn Count:  0
 Error Count:  1
 test:  no_braces
-Warn Count:  0
+Warn Count:  1
 Error Count:  1
 test:  no_decl
 Warn Count:  0
@@ -37,7 +37,7 @@ test:  nums_in_str
 Warn Count:  0
 Error Count:  1
 test:  print_while
-Warn Count:  0
+Warn Count:  1
 Error Count:  1
 test:  special_chars
 Warn Count:  0
@@ -140,5 +140,5 @@ test:  dollar_sign_missing
 Warn Count:  1
 Error Count:  0
 test:  extras_after_dollar_sign
-Warn Count:  0
-Error Count:  1
+Warn Count:  1
+Error Count:  0
