@@ -56,19 +56,21 @@ type cst =
   | While
   | If
   | Quote
+  | Null (** USED INTERNALLY *)
 (** The individual symboltable for a particular level of scope *)
 class ['a, 'b] table :
   object
     val mutable t : ('a, 'b) Hashtbl.t
     method add : 'a -> 'b -> unit
     method get : 'a -> 'b
-    method private mem : 'a -> bool
+    method mem : 'a -> bool
+    method set : 'a -> 'b -> unit
   end
 (** The scope of our program for a symboltable *)
 type scope =
-    Global of (string, string) table * scope array (** The Global scope for our
+    Global of (string, cst) table * scope array (** The Global scope for our
     program.  Holds the global symbol table, and an array of children scopes *)
-    | Scope of (string, string) table * scope array * scope ref (** The internal
+    | Scope of (string, cst) table * scope array * scope ref (** The internal
     scope for our global scope.  Holds the local symbol table, an array of
     children scopes, and its parent reference *)
 (** Our symbol table *)
@@ -80,6 +82,7 @@ class symboltable :
     method add : cst -> cst -> unit (** add element to the current scope *)
     method enter : unit (** Enter a new scope *)
     method exit : unit (** Exit into the parent scope *)
+    method set : cst -> cst -> unit
   end
 val parse : Lex.token list -> cst * symboltable (** Create the Concrete Syntax
 Tree, and Symbol Table from a list of tokens *)

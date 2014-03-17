@@ -4,6 +4,8 @@ exception Expected_Something_Else of string * token;;
 exception Already_Exists_In_table;;
 exception CompilerError;;
 exception CannotExitGlobalScope;;
+exception IncorrectCSTElementsInSymbolTableError;;
+exception Does_Not_Exist_In_Table;;
 
 type cst =
     | Program of cst * cst
@@ -49,12 +51,13 @@ type cst =
     | While
     | If
     | Quote
+    | Null (* USED INTERNALLY *)
 ;;
 
 class ['a, 'b] table =
     object (self)
         val mutable t = Hashtbl.create 0
-        method private mem x = Hashtbl.mem t x
+        method mem x = Hashtbl.mem t x
         method get x = Hashtbl.find t x
         method add (x:'a) (y:'b) =
             if
@@ -63,6 +66,13 @@ class ['a, 'b] table =
                 raise Already_Exists_In_table
             else
                 Hashtbl.add t x y
+        method set (x: 'a) (y: 'b) =
+            if
+                not (self#mem x)
+            then
+                raise Does_Not_Exist_In_Table
+            else
+                Hashtbl.replace t x y
     end
 ;;
 
@@ -71,18 +81,21 @@ class ['a, 'b] table =
  * We will be appending to the array to "add" new scopes
  *)
 type scope =
-    | Global of (string, string) table * scope array
+    | Global of (string, cst) table * scope array
     (* The last parameter is the parent scope *)
-    | Scope of (string, string) table * scope array * scope ref
+    | Scope of (string, cst) table * scope array * scope ref
 ;;
 
 class symboltable =
     (* A function that takes the unit () as its only parameter *)
     let scope_constructor parent = Scope (new table, [||], parent) in
     let scope_init = Global (new table, [||]) in
-    object
+    object (self)
         val mutable head = ref scope_init
         val mutable current_scope = ref scope_init
+        method private get_current_table = match !current_scope with
+                | Scope (t, _, _) -> ref t
+                | Global (t, _) -> ref t
         method enter =
             (*
              * We seem (because we actually aren't) to be abusing let..in
@@ -107,7 +120,39 @@ class symboltable =
             in
             let _ = current_scope <- parent_scope in
             ()
-        method add (_:cst) (_:cst) = ()
+        (* TODO worry about type *)
+        method add id _type = match id, _type with
+            | Id x, Int -> !(self#get_current_table)#add x Null
+            | Id x, Boolean -> !(self#get_current_table)#add x Null
+            | Id x, String -> !(self#get_current_table)#add x Null
+            | _, _ -> raise IncorrectCSTElementsInSymbolTableError
+        method set id _val = match id with
+            | Id x ->
+                    let get_parent scope = match scope with
+                        | Scope (_, _, x) -> x
+                        | Global (_, _) -> raise CannotExitGlobalScope
+                    in
+                    let get_symbol_table scope = match scope with
+                        | Scope (t, _, _) -> t
+                        | Global (t, _) -> t
+                    in
+                    (* reference to the dereference just allows us to have a mutable property *)
+                    let temp_scope_pointer = ref !current_scope in
+                    (*
+                     * If temp_score_pointer = head, then we are at the global
+                     * scope.  Let it error here if it wants.  Also stop if we
+                     * the value exists here!
+                     *)
+                    while (temp_scope_pointer <> head && not ((get_symbol_table !temp_scope_pointer)#mem x)) do
+                        (* ocaml will only take a dereference... *)
+                        temp_scope_pointer := !(get_parent !temp_scope_pointer)
+                    done;
+                    (*
+                     * Even if we didn't find the correct location, that's OK.
+                     * The table will throw the error we want
+                     *)
+                    (get_symbol_table !temp_scope_pointer)#set x _val
+            | _ -> raise IncorrectCSTElementsInSymbolTableError
     end
 ;;
 
@@ -376,8 +421,8 @@ and parse_boolean_expr tokens = match tokens#peek with
         let cp = parse_close_paren tokens in
         log_trace "Got boolean expr!";
         Boolean_Expr (op, expr1, boolop, expr2, cp)
-    | T_True _ -> tokens#pop; True 
-    | T_False _ -> tokens#pop; False
+    | T_True _ -> let _ = tokens#pop in True 
+    | T_False _ -> let _ = tokens#pop in False
     | x -> raise (Expected_Something_Else("boolexpr, boolval", x))
 and parse_int_expr tokens =
     log_trace "Expecting int expr (num intop expr)";
@@ -441,44 +486,35 @@ and parse_dollar_sign tokens =
     | x -> raise (Expected_Something_Else("dollar sign", x))
 and symboltable_of_cst ?(st=new symboltable) tree  = match tree with
     | Program (x, _) ->
-            let _ = symboltable_of_cst ~st x in
-            ()
-    | Block (_, x, _) ->
+            symboltable_of_cst ~st x
+    | Block (_, xs, _) ->
             log_trace "Entering new scope";
-            let _ = st#enter in
-            let _ = symboltable_of_cst ~st x in
+            st#enter;
+            symboltable_of_cst ~st xs;
             log_trace "Exiting current scope";
-            let _ = st#exit in
-            ()
-    | Statement_List (x, y) ->
-            (*
-             * We don't care about the order of execution because we are
-             * modifying an object, not worrying about return values
-             *)
-            let _ = symboltable_of_cst ~st x in
-            let _ = symboltable_of_cst ~st y in
-            ()
+            st#exit
+    | Statement_List (x, xs) ->
+            symboltable_of_cst ~st x;
+            symboltable_of_cst ~st xs
     | Statement_Var_Decl x ->
-            let _ = symboltable_of_cst ~st x in
-            ()
+            symboltable_of_cst ~st x
     | Statement_While_Statement x ->
-            let _ = symboltable_of_cst ~st x in
-            ()
+            symboltable_of_cst ~st x
     | Statement_If_Statement x ->
-            let _ = symboltable_of_cst ~st x in
-            ()
+            symboltable_of_cst ~st x
     | Statement_Block x ->
-            let _ = symboltable_of_cst ~st x in
-            ()
+            symboltable_of_cst ~st x
     | Var_Decl (_type, name) ->
             log_trace "Adding var to the symbol table";
-            let _ = st#add name _type in
-            ()
+            st#add name _type
     | While_Statement (_, x) ->
-            let _ = symboltable_of_cst ~st x in
-            ()
+            symboltable_of_cst ~st x
     | If_Statement (_, x) ->
-            let _ = symboltable_of_cst ~st x in
-            ()
+            symboltable_of_cst ~st x
+    | Statement_Assignment_Statement x ->
+            symboltable_of_cst ~st x
+    | Assignment_Statement (id, _, _val) ->
+            log_trace "Setting var into symbol table";
+            st#set id _val
     | _ -> ()
 ;;
