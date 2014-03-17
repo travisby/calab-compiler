@@ -199,6 +199,21 @@ let rec parse tokens =
         | Expected_Something_Else (expected, actual) ->
                 log_error ("Expected " ^ expected ^ " but got " ^ (token_as_string actual));
                 raise x
+        | Already_Exists_In_table ->
+                log_error "Cannot redeclare variable";
+                raise x
+        | CompilerError ->
+                log_error "Unknown compiler error";
+                raise x 
+        | CannotExitGlobalScope ->
+                log_error "Cannot exit global scope in symbol table";
+                raise x
+        | IncorrectCSTElementsInSymbolTableError ->
+                log_error "Incorrect elements were passed into the symbol table functions";
+                raise x
+        | Does_Not_Exist_In_Table ->
+                log_error "Variable was not declared before assigned";
+                raise x
         | _ -> raise x
 and parse_program tokens =
     log_trace "Expecting Program";
