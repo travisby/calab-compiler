@@ -366,12 +366,15 @@ and parse_boolean_expr tokens =
     log_trace "Got boolean expr!";
     Boolean_Expr (op, expr1, boolop, expr2, cp)
 and parse_int_expr tokens =
-    log_trace "Expecting int expr (num intop num)";
+    log_trace "Expecting int expr (num intop expr)";
     let digit1 = parse_digit tokens in
-    let intop = parse_intop tokens in
-    let digit2 = parse_digit tokens in
-    log_trace "Got int expr!";
-    Int_Expr (digit1, intop, digit2)
+        match tokens#peek with
+        | T_Plus _ -> 
+            let intop = parse_intop tokens in
+            let expr = parse_expr tokens in
+            log_trace "Got int expr!";
+            Int_Expr (digit1, intop, expr)
+        | _ -> digit1
 and parse_string_expr tokens =
     log_trace "Expecting string expr (\"str\")";
     let char_list = parse_char_list tokens in
