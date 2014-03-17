@@ -24,6 +24,7 @@ type cst =
     | Expr_Int_Expr of cst
     | Expr_String_Expr of cst
     | Expr_Id_Expr of cst
+    | Expr_Boolean_Expr of cst
     | Int_Expr of cst * cst * cst
     | String_Expr of cst
     | Boolean_Expr of cst * cst * cst * cst * cst
@@ -310,7 +311,7 @@ and parse_open_paren tokens =
             Open_Paren
     | x -> raise (Expected_Something_Else("Open Paren", x))
 and parse_expr tokens =
-    log_trace "Expecting expr (int expr | string expr | id)";
+    log_trace "Expecting expr (int expr | string expr | id | true | false)";
     match tokens#peek with
     | T_Digit _ ->
             log_trace "Got expr!";
@@ -321,6 +322,15 @@ and parse_expr tokens =
     | T_Id _ ->
             log_trace "Got expr!";
             Expr_Id_Expr (parse_id tokens)
+    | T_True _ ->
+            log_trace "Got expr!";
+            Expr_Boolean_Expr (parse_boolean_expr tokens)
+    | T_False _ ->
+            log_trace "Got expr!";
+            Expr_Boolean_Expr (parse_boolean_expr tokens)
+    | T_Open_Paren _ ->
+            log_trace "Got expr!";
+            Expr_Boolean_Expr (parse_boolean_expr tokens)
     | x -> raise (Expected_Something_Else("Digit | Quote | Id", x))
 and parse_close_paren tokens =
     log_trace "Expecting )";
@@ -356,15 +366,19 @@ and parse_type tokens =
             log_trace "Got type (string)!";
             String
     | x -> raise (Expected_Something_Else("int | boolean | string", x))
-and parse_boolean_expr tokens =
-    log_trace "Expecting boolean expr ( ( expr boolop expr ) )";
-    let op = parse_open_paren tokens in
-    let expr1 = parse_expr tokens in
-    let boolop = parse_boolop tokens in
-    let expr2 = parse_expr tokens in
-    let cp = parse_close_paren tokens in
-    log_trace "Got boolean expr!";
-    Boolean_Expr (op, expr1, boolop, expr2, cp)
+and parse_boolean_expr tokens = match tokens#peek with
+    | T_Open_Paren _ ->
+        log_trace "Expecting boolean expr ( ( expr boolop expr ) )";
+        let op = parse_open_paren tokens in
+        let expr1 = parse_expr tokens in
+        let boolop = parse_boolop tokens in
+        let expr2 = parse_expr tokens in
+        let cp = parse_close_paren tokens in
+        log_trace "Got boolean expr!";
+        Boolean_Expr (op, expr1, boolop, expr2, cp)
+    | T_True _ -> tokens#pop; True 
+    | T_False _ -> tokens#pop; False
+    | x -> raise (Expected_Something_Else("boolexpr, boolval", x))
 and parse_int_expr tokens =
     log_trace "Expecting int expr (num intop expr)";
     let digit1 = parse_digit tokens in
