@@ -1,9 +1,9 @@
 exception UnrecognizedTokenError of string * int;;
 exception UnrecognizedTokenInStringError of string;;
 exception CannotContainUnderscoreError;;
-let id_regex = Str.regexp "[a-z]";;
-let char_regex = Str.regexp "[a-zA-Z]";;
-let digit_regex = Str.regexp "[0-9]";;
+let id_regex = Str.regexp "^[a-z]$";;
+let char_regex = Str.regexp "^[a-zA-Z]$";;
+let digit_regex = Str.regexp "^[0-9]$";;
 let newline_regex = Str.regexp "\n";;
 let whitespace_regex = Str.regexp "\\s+";;
 let space_regex = Str.regexp " ";;
