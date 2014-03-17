@@ -1,12 +1,125 @@
+-------------------------------
 EXPECTING TO error
+test:  assign_digits
+Warn Count:  0
+Error Count:  1
+test:  assign_large_num
+Warn Count:  0
+Error Count:  1
+test:  bool_expr
+Warn Count:  0
+Error Count:  1
+test:  capital_var
+Warn Count:  0
+Error Count:  1
+test:  dollar_sign_early
+Warn Count:  0
+Error Count:  1
+test:  math_in_print
+Warn Count:  0
+Error Count:  1
+test:  multiple_line_literals
+Warn Count:  0
+Error Count:  1
 test:  no_braces
 Warn Count:  0
 Error Count:  1
+test:  no_decl
+Warn Count:  0
+Error Count:  1
+test:  not_in_scope
+Warn Count:  0
+Error Count:  1
+test:  not_token
+Warn Count:  0
+Error Count:  1
+test:  nums_in_str
+Warn Count:  0
+Error Count:  1
+test:  print_while
+Warn Count:  0
+Error Count:  1
+test:  special_chars
+Warn Count:  0
+Error Count:  1
+test:  string_literal
+Warn Count:  0
+Error Count:  1
+test:  string_literal2
+Warn Count:  0
+Error Count:  1
+test:  stuff_before_first_brace
+Warn Count:  0
+Error Count:  1
+test:  unbalanced_braces
+Warn Count:  0
+Error Count:  1
+test:  var_num
+Warn Count:  0
+Error Count:  1
+test:  while_str_instead_of_bool
+Warn Count:  0
+Error Count:  1
+test:  zeroed_number
+Warn Count:  0
+Error Count:  1
+-------------------------------
 EXPECTING TO successful
+test:  assign_intexpr
+Warn Count:  0
+Error Count:  0
+test:  assign_no_space
+Warn Count:  0
+Error Count:  0
+test:  assign_self
+Warn Count:  0
+Error Count:  0
+test:  assign_spaces
+Warn Count:  0
+Error Count:  0
+test:  decl
+Warn Count:  0
+Error Count:  0
+test:  decl_and_print
+Warn Count:  0
+Error Count:  0
+test:  decl_and_use
+Warn Count:  0
+Error Count:  0
+test:  decl_bool
+Warn Count:  0
+Error Count:  0
+test:  decl_str
+Warn Count:  0
+Error Count:  0
 test:  every_statement
 Warn Count:  0
 Error Count:  0
+test:  long_prog
+Warn Count:  0
+Error Count:  0
+test:  many_prints
+Warn Count:  0
+Error Count:  0
+test:  many_scopes
+Warn Count:  0
+Error Count:  0
 test:  most_simple_program
+Warn Count:  0
+Error Count:  0
+test:  print_bool
+Warn Count:  0
+Error Count:  0
+test:  print_char
+Warn Count:  0
+Error Count:  0
+test:  print_num
+Warn Count:  0
+Error Count:  0
+test:  print_statement
+Warn Count:  0
+Error Count:  0
+test:  scoped_prog
 Warn Count:  0
 Error Count:  0
 test:  simple_assignment
@@ -18,7 +131,14 @@ Error Count:  0
 test:  spaced_string
 Warn Count:  0
 Error Count:  0
+test:  without_spaces
+Warn Count:  0
+Error Count:  0
+-------------------------------
 EXPECTING TO warn
 test:  dollar_sign_missing
 Warn Count:  1
 Error Count:  0
+test:  extras_after_dollar_sign
+Warn Count:  0
+Error Count:  1
