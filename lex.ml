@@ -37,6 +37,7 @@ type token =
 
 let log_trace = Log.log_trace_func "lex"
 let log_error = Log.log_error_func "lex"
+let log_warn = Log.log_warn_func "lex"
 
 let tokenize strs lineno word = match word with
     | "{" ->
@@ -181,7 +182,27 @@ let lex str =
     let strings_in_program = get_string_queue str in
     let string_replaced = replace_strings str in
 
-    let my_str = add_spaces_func string_replaced in
+    (* Check for the existence of a $, and any code after it *)
+    let _str =
+        if
+            String.contains string_replaced '$'
+        then
+            let pos_of_ds = String.rindex string_replaced '$' in
+            if
+                pos_of_ds < (String.length string_replaced - 1)
+            then
+                begin
+                    log_warn "Extra text after $.  Ignoring it";
+                    String.sub string_replaced 0 (pos_of_ds + 1)
+                end
+            else string_replaced
+        else
+            begin
+                log_warn "Missing $.  Adding for you!";
+                String.concat "" [string_replaced; "$"]
+            end
+    in
+    let my_str = add_spaces_func _str in
     let string_lines = Str.split newline_regex my_str in
     let string_lines_words = List.map (Str.split space_regex) string_lines in
     let trimmed = List.map (List.map String.trim) string_lines_words in
