@@ -37,3 +37,16 @@ let queue_from_list lst =
     fill_queue lst;
     queue
 ;;
+
+let rec string_of_char_list str =
+    let string_head str = String.get str 0 in
+    let string_tail str = String.sub str 1 ((String.length str) - 1) in
+    match (String.length str) with
+    | 0 -> []
+    | _ -> string_head str::(string_of_char_list (string_tail str))
+;;
+
+let list_last lst = List.nth lst ((List.length lst) - 1)
+let list_init lst = List.rev (List.tl (List.rev lst))
+
+let char_of_string chr = String.make 1 chr
