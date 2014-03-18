@@ -181,15 +181,21 @@ let lex str =
                         char_count := !char_count + 1;
                         tokens @ [ds]
                 | x when Str.string_match digit_regex x 0 ->
+                        char_count := !char_count + 1;
                         tokens @ [T_Digit token_data]
                 | x when Str.string_match id_regex x 0 && not odd_quotes  ->
+                        char_count := !char_count + 1;
                         tokens @ [T_Id token_data]
                 | x when Str.string_match newline_regex x 0 && not odd_quotes ->
                         line_count := !line_count + 1;
                         char_count := 0;
                         tokens
-                | x when Str.string_match whitespace_regex x 0 && not odd_quotes -> tokens
-                | x when (Str.string_match char_regex x 0 && odd_quotes) -> tokens @ [T_Char token_data]
+                | x when Str.string_match whitespace_regex x 0 && not odd_quotes ->
+                        char_count := !char_count + 1;
+                        tokens
+                | x when (Str.string_match char_regex x 0 && odd_quotes) ->
+                        char_count := !char_count + 1;
+                        tokens @ [T_Char token_data]
                 | _ -> raise (UnrecognizedTokenError (next_token_possible, !line_count, !char_count))
     in
     List.fold_right on_token_possible token_possibles []
