@@ -2,10 +2,10 @@ exception UnrecognizedTokenError of string * int;;
 exception UnrecognizedTokenInStringError of string;;
 exception CannotContainUnderscoreError;;
 let id_regex = Str.regexp "^[a-z]$";;
-let char_regex = Str.regexp "^[a-zA-Z]$";;
+let char_regex = Str.regexp "^[a-z ]$";;
 let digit_regex = Str.regexp "^[0-9]$";;
 let newline_regex = Str.regexp "\n";;
-let whitespace_regex = Str.regexp "\\s+";;
+let whitespace_regex = Str.regexp "[\t\n\r ]";;
 let space_regex = Str.regexp " ";;
 let quote_regex = Str.regexp "\"";;
 
@@ -39,176 +39,120 @@ let log_trace = Log.log_trace_func "lex"
 let log_error = Log.log_error_func "lex"
 let log_warn = Log.log_warn_func "lex"
 
-let tokenize strs lineno word = match word with
-    | "{" ->
-            log_trace ("Found { token on line " ^ (string_of_int lineno));
-            T_Open_Brace {lineno=lineno; value="{"}
-    | "}" ->
-            log_trace ("Found } token on line " ^ (string_of_int lineno));
-            T_Close_Brace {lineno=lineno; value="}"}
-    | "print" ->
-            log_trace ("Found print token on line " ^ (string_of_int lineno));
-            T_Print {lineno=lineno; value="print"}
-    | "(" ->
-            log_trace ("Found ( token on line " ^ (string_of_int lineno));
-            T_Open_Paren {lineno=lineno; value="("}
-    | ")" ->
-            log_trace ("Found ) token on line " ^ (string_of_int lineno));
-            T_Close_Paren {lineno=lineno; value=")"}
-    | "while" ->
-            log_trace ("Found while token on line " ^ (string_of_int lineno));
-            T_While {lineno=lineno; value="while"}
-    | "if" ->
-            log_trace ("Found if token on line " ^ (string_of_int lineno));
-            T_If {lineno=lineno; value="if"}
-    | "int" ->
-            log_trace ("Found int token on line " ^ (string_of_int lineno));
-            T_Int {lineno=lineno; value="int"}
-    | "string" ->
-            log_trace ("Found string token on line " ^ (string_of_int lineno));
-            T_String {lineno=lineno; value="string"}
-    | "boolean" ->
-            log_trace ("Found boolean token on line " ^ (string_of_int lineno));
-            T_Boolean {lineno=lineno; value="boolean"}
-    | "=" ->
-            log_trace ("Found = token on line " ^ (string_of_int lineno));
-            T_Assignment {lineno=lineno; value="="}
-    | "==" ->
-            log_trace ("Found == token on line " ^ (string_of_int lineno));
-            T_Equality {lineno=lineno; value="=="}
-    | "!=" ->
-            log_trace ("Found != token on line " ^ (string_of_int lineno));
-            T_Inequality {lineno=lineno; value="!="}
-    | "false" ->
-            log_trace ("Found false token on line " ^ (string_of_int lineno));
-            T_False {lineno=lineno; value="false"}
-    | "true" ->
-            log_trace ("Found true token on line " ^ (string_of_int lineno));
-            T_True {lineno=lineno; value="true"}
-    | "+" ->
-            log_trace ("Found + token on line " ^ (string_of_int lineno));
-            T_Plus {lineno=lineno; value="+"}
-    | "\"" ->
-            log_trace ("Found \" token on line " ^ (string_of_int lineno));
-            T_Double_Quote {lineno=lineno; value="\""}
-    | "$" ->
-            log_trace ("Found $ token on line " ^ (string_of_int lineno));
-            T_Dollar_Sign {lineno=lineno; value="$"}
-    | "_" ->
-            log_trace ("Found a charlist on line " ^ (string_of_int lineno));
-            T_Char_List {lineno=lineno; value=(Queue.pop strs)}
-    | str when Str.string_match id_regex str 0 ->
-            log_trace ("Found id token" ^ str ^ "on line " ^ (string_of_int lineno));
-            T_Id {lineno=lineno; value=str}
-    | str when Str.string_match digit_regex str 0 ->
-            log_trace ("Found digit token" ^ str ^ "on line " ^ (string_of_int lineno));
-            T_Digit {lineno=lineno; value=str}
-    | x -> 
-            log_error ("Unrecognized token '"^ x ^ "' on line " ^ (string_of_int lineno));
-            raise (UnrecognizedTokenError (x, lineno))
-;;
-
-let split_on_newline str = Str.split newline_regex str;;
-let split_on_space str = Str.split space_regex str;;
-let split_on_quote str = Str.split quote_regex str;;
-
-let get_string_queue str =
-    (*
-     * Because our program must not begin with ", we can guarantee
-     * that every odd indexed element in our split list will be the contents of
-     * a string!
-     *
-     * e.g., { "hello alan" } would be split to... ["{", "hello alan", "}]
-     * We can just return every odd-indexed element, and rejoin
-     *)
-    let strings_by_quotes = split_on_quote str in
-    let strings_in_str = Utils.get_odd_indexes strings_by_quotes in
-    (* if any of the strings contain an unapproved character, error *)
-    List.iter  (
-        fun x ->
-            if
-                (Str.string_match (Str.regexp "[^a-z ]") x 0)
-                then
-                    begin
-                        log_error "Cannot add that token into a string";
-                        raise (UnrecognizedTokenInStringError (Str.matched_string x))
-                    end
-            else ()
-    ) strings_in_str;
-    Utils.queue_from_list strings_in_str
-
-let replace_strings str = 
-    (*
-     * Using the same technique as for get_string_queue,
-     * We can isolate the strings, and replace them with an underscore,
-     * rebuild the string, and return
-     *)
-    let strings_by_quotes = split_on_quote str in
-    let strings_replaced = List.mapi (fun i x -> if Utils.odd i then x else "_") strings_by_quotes in
-    Utils.join " " strings_replaced
-
 let lex str =
-    (*
-     * Without the knowledge that we are within quotes at a given time,
-     * our tokenize function would be ambiguous.  We would not know whether
-     * the current characters are creating an id, or a charlist
-     *
-     * To prevent this we search the full string for quotes
-     * When we found a quote, we replace it with the _ character, 
-     * something that should not already exist in the user's program.
-     * We then place all of that replaced text into a queue strings_in_program
-     *
-     * The above gives us a state of always having a "one word" token to
-     * tokenize, allowing us to split on quotes
-     *
-     * We make sure that is passed into our tokenize function, so any time our
-     * keyword is found, we can then replace it with the value in the queue!
-     *)
-
-    (* ensure there is no _ already in the program *)
-    if
-        String.contains str '_'
-    then
-        begin
-            log_error "Your program cannot contain an underscore anywhere";
-            raise CannotContainUnderscoreError
-        end
-    else ();
-    let my_reg = Str.regexp "==\\|!=\\|=\\|[(){}$\"\\|\\+]" in
-    let add_spaces_func str = (Str.global_replace my_reg " \\0 " str) in
-    let remove_blanks_func = List.filter (fun x -> not (Str.string_match (Str.regexp "^$") x 0)) in
-    let tokenize_by_line_func lineno queue = List.map (fun x -> tokenize queue lineno x) in
-
-    let strings_in_program = get_string_queue str in
-    let string_replaced = replace_strings str in
-
-    (* Check for the existence of a $, and any code after it *)
-    let _str =
+    let char_list = Utils.string_of_char_list str in
+    let on_char next_char lst =
+        (* 
+         * We use this to know whether or not we're in a string literal.  If we
+         * are, we shouldn't combine characters
+         *)
+        let odd_quotes = Utils.odd (List.length (List.filter (function | "\"" -> true | _ -> false) lst)) in
         if
-            String.contains string_replaced '$'
+            List.length lst > 0
         then
-            let pos_of_ds = String.rindex string_replaced '$' in
-            if
-                pos_of_ds < (String.length string_replaced - 1)
-            then
-                begin
-                    log_warn "Extra text after $.  Ignoring it";
-                    String.sub string_replaced 0 (pos_of_ds + 1)
-                end
-            else string_replaced
+            match (Utils.list_last lst) with
+            (* > 1 character operators *)
+            | "!" when next_char = '=' -> (Utils.list_init lst) @ ["!="]
+            | "=" when next_char = '=' -> (Utils.list_init lst) @ ["=="]
+            (* print permutations... *)
+            | "p" when next_char = 'r' && not odd_quotes -> (Utils.list_init lst) @ ["pr"]
+            | "pr" when next_char = 'i' -> (Utils.list_init lst) @ ["pri"]
+            | "pri" when next_char = 'n' -> (Utils.list_init lst) @ ["prin"]
+            | "prin" when next_char = 't' -> (Utils.list_init lst) @ ["print"]
+            (* while permutations... *)
+            | "w" when next_char = 'h' && not odd_quotes -> (Utils.list_init lst) @ ["wh"]
+            | "wh" when next_char = 'i' -> (Utils.list_init lst) @ ["whi"]
+            | "whi" when next_char = 'l' -> (Utils.list_init lst) @ ["whil"]
+            | "whil" when next_char = 'e' -> (Utils.list_init lst) @ ["while"]
+            (* if permutations... *)
+            | "i" when next_char = 'f' && not odd_quotes -> (Utils.list_init lst) @ ["if"]
+            (* int permutations... *)
+            | "i" when next_char = 'n' && not odd_quotes -> (Utils.list_init lst) @ ["in"]
+            | "in" when next_char = 't' -> (Utils.list_init lst) @ ["int"]
+            (* string permutations... *)
+            | "s" when next_char = 't' && not odd_quotes -> (Utils.list_init lst) @ ["st"]
+            | "st" when next_char = 'r' -> (Utils.list_init lst) @ ["str"]
+            | "str" when next_char = 'i' -> (Utils.list_init lst) @ ["stri"]
+            | "stri" when next_char = 'n' -> (Utils.list_init lst) @ ["strin"]
+            | "strin" when next_char = 'g' -> (Utils.list_init lst) @ ["string"]
+            (* boolean permutations *)
+            | "b" when next_char = 'o' && not odd_quotes -> (Utils.list_init lst) @ ["bo"]
+            | "bo" when next_char = 'o' -> (Utils.list_init lst) @ ["boo"]
+            | "boo" when next_char = 'l' -> (Utils.list_init lst) @ ["bool"]
+            | "bool" when next_char = 'e' -> (Utils.list_init lst) @ ["boole"]
+            | "boole" when next_char = 'a' -> (Utils.list_init lst) @ ["boolea"]
+            | "boolea" when next_char = 'n' -> (Utils.list_init lst) @ ["boolean"]
+            (* false permutations *)
+            | "f" when next_char = 'a' && not odd_quotes -> (Utils.list_init lst) @ ["fa"]
+            | "fa" when next_char = 'l' -> (Utils.list_init lst) @ ["fal"]
+            | "fal" when next_char = 's' -> (Utils.list_init lst) @ ["fals"]
+            | "fals" when next_char = 'e' -> (Utils.list_init lst) @ ["false"]
+            (* true permutations *)
+            | "t" when next_char = 'r' && not odd_quotes -> (Utils.list_init lst) @ ["tr"]
+            | "tr" when next_char = 'u' -> (Utils.list_init lst) @ ["tru"]
+            | "tru" when next_char = 'e' -> (Utils.list_init lst) @ ["true"]
+            (*
+             * what if building up our strings was wrong?
+             * We will want to explode the previous built-up string
+             *
+             * But only if we are not actually... complete
+             *)
+            | x when String.length x > 1
+            && not (List.mem x ["!="; "=="; "print"; "while"; "if"; "int"; "string"; "boolean"; "false"; "true"]) ->
+                    let piece1 = Utils.list_init lst in
+                    let piece2 = Utils.string_of_string_list x in
+                    let piece3 = [Utils.char_of_string next_char] in
+                    piece1 @ piece2 @ piece3
+            (* Base case... just create a new element *)
+            | _ -> lst @ [Utils.char_of_string next_char]
         else
-            begin
-                log_warn "Missing $.  Adding for you!";
-                String.concat "" [string_replaced; "$"]
-            end
+            lst @ [Utils.char_of_string next_char]
     in
-    let my_str = add_spaces_func _str in
-    let string_lines = Str.split newline_regex my_str in
-    let string_lines_words = List.map (Str.split space_regex) string_lines in
-    let trimmed = List.map (List.map String.trim) string_lines_words in
-    let filtered = List.map (remove_blanks_func) trimmed in
-    let token_lines = List.mapi (fun i -> tokenize_by_line_func  i strings_in_program) filtered in
-    List.flatten token_lines
+    let token_possibles = List.rev (List.fold_right (on_char) (List.rev char_list) []) in
+    List.iter (print_endline) token_possibles;
+    let on_token_possible next_token_possible tokens =
+        (* special token used for lookup later *)
+        let ds = T_Dollar_Sign {lineno=0; value="$"} in
+        let odd_quotes = Utils.odd (List.length (List.filter (function | T_Double_Quote _ -> true | _ -> false) tokens)) in
+        (* TODO handle lineno *)
+        let token_data = {lineno=0; value=next_token_possible} in
+        log_trace ("Looking at " ^ next_token_possible);
+        log_trace ("Current state of odds..." ^ ((function | true -> "true" | false -> "false") odd_quotes));
+        if
+            List.mem ds tokens
+        then
+            begin
+                log_warn ("Extra character after $... Ignoring: " ^ next_token_possible);
+                tokens
+            end
+        else
+            match next_token_possible with
+                | "{" -> tokens @ [T_Open_Brace token_data]
+                | "}" -> tokens @ [T_Close_Brace token_data]
+                | "print" -> tokens @ [T_Print token_data]
+                | "(" -> tokens @ [T_Open_Paren token_data]
+                | ")" -> tokens @ [T_Close_Paren token_data]
+                | "while" -> tokens @ [T_While token_data]
+                | "if" -> tokens @ [T_If token_data]
+                | "int" -> tokens @ [T_Int token_data]
+                | "string" -> tokens @ [T_String token_data]
+                | "boolean" -> tokens @ [T_Boolean token_data]
+                | "=" -> tokens @ [T_Assignment token_data]
+                | "==" -> tokens @ [T_Equality token_data]
+                | "!=" -> tokens @ [T_Inequality token_data]
+                | "true" -> tokens @ [T_True token_data]
+                | "false" -> tokens @ [T_False token_data]
+                | "+" -> tokens @ [T_Plus token_data]
+                | "\"" -> tokens @ [T_Double_Quote token_data]
+                | "$" -> tokens @ [ds]
+                | x when Str.string_match digit_regex x 0 -> tokens @ [T_Digit token_data]
+                | x when Str.string_match id_regex x 0 && not odd_quotes  -> tokens @ [T_Id token_data]
+                | x when Str.string_match whitespace_regex x 0 -> tokens
+                | x when (Str.string_match char_regex x 0 && odd_quotes) -> tokens @ [T_Char token_data]
+                (* TODO handle lineno *)
+                | _ -> raise (UnrecognizedTokenError (next_token_possible, 0))
+    in
+    List.fold_right on_token_possible token_possibles []
 ;;
 
 let token_as_string token = match token with

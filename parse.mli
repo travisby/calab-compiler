@@ -31,10 +31,10 @@ type cst =
   | Expr_Id_Expr of cst
   | Expr_Boolean_Expr of cst
   | Int_Expr of cst * cst * cst
-  | String_Expr of cst
+  | String_Expr of cst * cst * cst
   | Boolean_Expr of cst * cst * cst * cst * cst
   | Id of string
-  | Char_List of string
+  | Char_List of cst * cst
   | Empty_Char_List
   | Int
   | String
