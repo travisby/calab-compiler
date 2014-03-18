@@ -60,7 +60,6 @@ type cst =
 (** The individual symboltable for a particular level of scope *)
 class ['a, 'b] table :
   object
-    val mutable t : ('a, 'b) Hashtbl.t
     method add : 'a -> 'b -> unit
     method get : 'a -> 'b
     method mem : 'a -> bool
@@ -76,9 +75,6 @@ type scope =
 (** Our symbol table *)
 class symboltable :
   object
-    val mutable current_scope : scope ref (** Reference to the scope we are
-    currently "in" *)
-    val mutable head : scope ref (** The global scope *)
     method add : cst -> cst -> unit (** add element to the current scope *)
     method enter : unit (** Enter a new scope *)
     method exit : unit (** Exit into the parent scope *)
