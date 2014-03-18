@@ -1,4 +1,4 @@
-exception UnrecognizedTokenError of string * int;;
+exception UnrecognizedTokenError of string * int * int;;
 exception UnrecognizedTokenInStringError of string;;
 exception CannotContainUnderscoreError;;
 let id_regex = Str.regexp "^[a-z]$";;
@@ -190,7 +190,7 @@ let lex str =
                         tokens
                 | x when Str.string_match whitespace_regex x 0 && not odd_quotes -> tokens
                 | x when (Str.string_match char_regex x 0 && odd_quotes) -> tokens @ [T_Char token_data]
-                | _ -> raise (UnrecognizedTokenError (next_token_possible, !line_count))
+                | _ -> raise (UnrecognizedTokenError (next_token_possible, !line_count, !char_count))
     in
     List.fold_right on_token_possible token_possibles []
 ;;

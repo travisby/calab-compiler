@@ -1,4 +1,4 @@
-exception UnrecognizedTokenError of string * int
+exception UnrecognizedTokenError of string * int * int
 exception CannotContainUnderscoreError
 type token_data = { lineno : int; value : string; charno: int;}
 type token =
