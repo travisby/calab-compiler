@@ -9,7 +9,7 @@ let whitespace_regex = Str.regexp "[\t\n\r ]";;
 let space_regex = Str.regexp " ";;
 let quote_regex = Str.regexp "\"";;
 
-type token_data = {lineno: int; value: string};;
+type token_data = {lineno: int; value: string; charno: int;};;
 type token =
    | T_Open_Brace of token_data
    | T_Close_Brace of token_data
@@ -110,12 +110,13 @@ let lex str =
     in
     let token_possibles = List.rev (List.fold_right (on_char) (List.rev char_list) []) in
     let line_count = ref 0 in
+    let char_count = ref 0 in
     let on_token_possible next_token_possible tokens =
         log_trace ("Looking at " ^ next_token_possible);
         (* special token used for lookup later *)
-        let ds = T_Dollar_Sign {lineno=(-1); value="$"} in
+        let ds = T_Dollar_Sign {lineno=(-1); value="$"; charno=0} in
         let odd_quotes = Utils.odd (List.length (List.filter (function | T_Double_Quote _ -> true | _ -> false) tokens)) in
-        let token_data = {lineno=(!line_count); value=next_token_possible} in
+        let token_data = {lineno=(!line_count); value=next_token_possible; charno=(!char_count)} in
         if
             List.mem ds tokens
         then
@@ -125,28 +126,67 @@ let lex str =
             end
         else
             match next_token_possible with
-                | "{" -> tokens @ [T_Open_Brace token_data]
-                | "}" -> tokens @ [T_Close_Brace token_data]
-                | "print" -> tokens @ [T_Print token_data]
-                | "(" -> tokens @ [T_Open_Paren token_data]
-                | ")" -> tokens @ [T_Close_Paren token_data]
-                | "while" -> tokens @ [T_While token_data]
-                | "if" -> tokens @ [T_If token_data]
-                | "int" -> tokens @ [T_Int token_data]
-                | "string" -> tokens @ [T_String token_data]
-                | "boolean" -> tokens @ [T_Boolean token_data]
-                | "=" -> tokens @ [T_Assignment token_data]
-                | "==" -> tokens @ [T_Equality token_data]
-                | "!=" -> tokens @ [T_Inequality token_data]
-                | "true" -> tokens @ [T_True token_data]
-                | "false" -> tokens @ [T_False token_data]
-                | "+" -> tokens @ [T_Plus token_data]
-                | "\"" -> tokens @ [T_Double_Quote token_data]
-                | "$" -> tokens @ [ds]
-                | x when Str.string_match digit_regex x 0 -> tokens @ [T_Digit token_data]
-                | x when Str.string_match id_regex x 0 && not odd_quotes  -> tokens @ [T_Id token_data]
+                | "{" ->
+                        char_count := !char_count + 1;
+                        tokens @ [T_Open_Brace token_data]
+                | "}" ->
+                        char_count := !char_count + 1;
+                        tokens @ [T_Close_Brace token_data]
+                | "print" ->
+                        char_count := !char_count + 5;
+                        tokens @ [T_Print token_data]
+                | "(" ->
+                        char_count := !char_count + 1;
+                        tokens @ [T_Open_Paren token_data]
+                | ")" ->
+                        char_count := !char_count + 1;
+                        tokens @ [T_Close_Paren token_data]
+                | "while" ->
+                        char_count := !char_count + 5;
+                        tokens @ [T_While token_data]
+                | "if" ->
+                        char_count := !char_count + 2;
+                        tokens @ [T_If token_data]
+                | "int" ->
+                        char_count := !char_count + 3;
+                        tokens @ [T_Int token_data]
+                | "string" ->
+                        char_count := !char_count + 6;
+                        tokens @ [T_String token_data]
+                | "boolean" ->
+                        char_count := !char_count + 7;
+                        tokens @ [T_Boolean token_data]
+                | "=" ->
+                        char_count := !char_count + 1;
+                        tokens @ [T_Assignment token_data]
+                | "==" ->
+                        char_count := !char_count + 2;
+                        tokens @ [T_Equality token_data]
+                | "!=" ->
+                        char_count := !char_count + 2;
+                        tokens @ [T_Inequality token_data]
+                | "true" ->
+                        char_count := !char_count + 4;
+                        tokens @ [T_True token_data]
+                | "false" ->
+                        char_count := !char_count + 5;
+                        tokens @ [T_False token_data]
+                | "+" ->
+                        char_count := !char_count + 1;
+                        tokens @ [T_Plus token_data]
+                | "\"" ->
+                        char_count := !char_count + 1;
+                        tokens @ [T_Double_Quote token_data]
+                | "$" ->
+                        char_count := !char_count + 1;
+                        tokens @ [ds]
+                | x when Str.string_match digit_regex x 0 ->
+                        tokens @ [T_Digit token_data]
+                | x when Str.string_match id_regex x 0 && not odd_quotes  ->
+                        tokens @ [T_Id token_data]
                 | x when Str.string_match newline_regex x 0 && not odd_quotes ->
                         line_count := !line_count + 1;
+                        char_count := 0;
                         tokens
                 | x when Str.string_match whitespace_regex x 0 && not odd_quotes -> tokens
                 | x when (Str.string_match char_regex x 0 && odd_quotes) -> tokens @ [T_Char token_data]
