@@ -57,22 +57,6 @@ type cst =
   | If
   | Quote
   | Null (** USED INTERNALLY *)
-(** The individual symboltable for a particular level of scope *)
-class ['a, 'b] table :
-  object
-    method add : 'a -> 'b -> unit
-    method get : 'a -> 'b
-    method mem : 'a -> bool
-    method set : 'a -> 'b -> unit
-  end
-(** The scope of our program for a symboltable *)
-type scope =
-    Global of (string, cst) table * scope array (** The Global scope for our
-    program.  Holds the global symbol table, and an array of children scopes *)
-    | Scope of (string, cst) table * scope array * scope ref (** The internal
-    scope for our global scope.  Holds the local symbol table, an array of
-    children scopes, and its parent reference *)
-(** Our symbol table *)
 class symboltable :
   object
     method add : cst -> cst -> unit (** add element to the current scope *)
