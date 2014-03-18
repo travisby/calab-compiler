@@ -33,7 +33,7 @@ type cst =
   | Int_Expr of cst * cst * cst
   | String_Expr of cst * cst * cst
   | Boolean_Expr of cst * cst * cst * cst * cst
-  | Id of string
+  | Id of char
   | Char_List of cst * cst
   | Empty_Char_List
   | Int

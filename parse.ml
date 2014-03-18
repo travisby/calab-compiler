@@ -30,7 +30,7 @@ type cst =
     | Int_Expr of cst * cst * cst
     | String_Expr of cst * cst * cst
     | Boolean_Expr of cst * cst * cst * cst * cst
-    | Id of string
+    | Id of char
     | Char_List of cst * cst
     | Empty_Char_List
     | Int | String | Boolean
@@ -82,9 +82,9 @@ class ['a, 'b] table =
  * We will be appending to the array to "add" new scopes
  *)
 type scope =
-    | Global of (string, cst) table * scope array
+    | Global of (char, cst) table * scope array
     (* The last parameter is the parent scope *)
-    | Scope of (string, cst) table * scope array * scope ref
+    | Scope of (char, cst) table * scope array * scope ref
 ;;
 
 class symboltable =
@@ -405,7 +405,7 @@ and parse_id tokens =
     match tokens#pop with 
     | T_Id x ->
             log_trace "Got <id>!";
-            Id (x.value)
+            Id (String.get x.value 0)
     | x -> raise (Expected_Something_Else("Id", x))
 and parse_equals tokens =
     log_trace "Expecting =";
