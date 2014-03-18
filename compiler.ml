@@ -13,10 +13,6 @@ with x -> match x with
             print_endline karet_at;
             print_endline "--------------------------";
             raise x
-            (*
-    |  UnrecognizedTokenInStringError (_char)
-    |  CannotContainUnderscoreError
-    *)
     | x ->
         print_newline ();
         print_string "Cannot recover.  Exitting";
