@@ -28,10 +28,10 @@ type cst =
     | Expr_Id_Expr of cst
     | Expr_Boolean_Expr of cst
     | Int_Expr of cst * cst * cst
-    | String_Expr of cst
+    | String_Expr of cst * cst * cst
     | Boolean_Expr of cst * cst * cst * cst * cst
     | Id of string
-    | Char_List of string
+    | Char_List of cst * cst
     | Empty_Char_List
     | Int | String | Boolean
     | Char of char
@@ -377,7 +377,7 @@ and parse_expr tokens =
     | T_Digit _ ->
             log_trace "Got expr!";
             Expr_Int_Expr (parse_int_expr tokens)
-    | T_Char_List _ ->
+    | T_Double_Quote _ ->
             log_trace "Got expr!";
             Expr_String_Expr (parse_string_expr tokens)
     | T_Id _ ->
@@ -452,9 +452,14 @@ and parse_int_expr tokens =
         | _ -> digit1
 and parse_string_expr tokens =
     log_trace "Expecting string expr (\"str\")";
+    let quote1 = parse_quote tokens in
     let char_list = parse_char_list tokens in
+    let quote2 = parse_quote tokens in
     log_trace "Got string expr!";
-    String_Expr char_list
+    String_Expr (quote1, char_list, quote2)
+and parse_quote tokens = match tokens#pop with
+    | T_Double_Quote _ -> Quote
+    | x -> raise (Expected_Something_Else ("\"", x))
 and parse_char tokens =
     log_trace "Expecting character";
     match tokens#pop with 
@@ -488,11 +493,19 @@ and parse_intop tokens =
     | x -> raise (Expected_Something_Else("+", x))
 and parse_char_list tokens =
     log_trace "Expecting character list";
-    match (tokens#pop) with
-    | T_Char_List x ->
-        log_trace "Got character list!";
-        Char_List x.value
-    | x -> raise (Expected_Something_Else("a string", x))
+    match (tokens#peek) with
+        | T_Char x when x.value = " " ->
+                let space = parse_space tokens in
+                let char_list = parse_char_list tokens in
+                Char_List (space, char_list)
+        | T_Char x ->
+                let _char = parse_char tokens in
+                let char_list = parse_char_list tokens in
+                Char_List (_char, char_list)
+        | _ -> Empty_Char_List
+and  parse_space tokens = match tokens#pop with
+    | T_Char x when x.value = " " -> Space
+    | x -> raise (Expected_Something_Else ("space character", x))
 and parse_dollar_sign tokens =
     log_trace "Expecting $";
     match (tokens#pop) with
