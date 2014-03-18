@@ -1,6 +1,6 @@
 {
     
-    print ( " Hello, World! " )
+    print ( " hello world " )
     int x
     x = 1 + 0
     while ( x == 1 + 0 ) {
