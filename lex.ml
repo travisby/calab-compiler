@@ -95,34 +95,21 @@ let lex str =
              * what if building up our strings was wrong?
              * We will want to explode the previous built-up string
              *
+             * But only if we are not actually... complete
              *)
-            | "pr" -> (Utils.list_init lst) @ ["p"; "r"; Utils.char_of_string next_char]
-            | "pri" -> (Utils.list_init lst) @ ["p"; "r"; "i"; Utils.char_of_string next_char]
-            | "prin" -> (Utils.list_init lst) @ ["p"; "r"; "i"; "n"; Utils.char_of_string next_char]
-            | "wh" -> (Utils.list_init lst) @ ["w"; "h"; Utils.char_of_string next_char]
-            | "whi" -> (Utils.list_init lst) @ ["w"; "h"; "i"; Utils.char_of_string next_char]
-            | "whil" -> (Utils.list_init lst) @ ["w"; "h"; "i"; "l"; Utils.char_of_string next_char]
-            | "in" -> (Utils.list_init lst) @ ["i"; "n"; Utils.char_of_string next_char]
-            | "st" -> (Utils.list_init lst) @ ["s"; "t"; Utils.char_of_string next_char]
-            | "str" -> (Utils.list_init lst) @ ["s"; "t"; "r"; Utils.char_of_string next_char]
-            | "stri" -> (Utils.list_init lst) @ ["s"; "t"; "r"; "i"; Utils.char_of_string next_char]
-            | "strin" -> (Utils.list_init lst) @ ["s"; "t"; "r"; "i"; "n"; Utils.char_of_string next_char]
-            | "bo" -> (Utils.list_init lst) @ ["b"; "o"; Utils.char_of_string next_char]
-            | "boo" -> (Utils.list_init lst) @ ["b"; "o"; "o"; Utils.char_of_string next_char]
-            | "bool" -> (Utils.list_init lst) @ ["b"; "o"; "o"; "l"; Utils.char_of_string next_char]
-            | "boole" -> (Utils.list_init lst) @ ["b"; "o"; "o"; "l"; "e"; Utils.char_of_string next_char]
-            | "boolea" -> (Utils.list_init lst) @ ["b"; "o"; "o"; "l"; "e"; "a"; Utils.char_of_string next_char]
-            | "fa" -> (Utils.list_init lst) @ ["f"; "a"; Utils.char_of_string next_char]
-            | "fal" -> (Utils.list_init lst) @ ["f"; "a"; "l"; Utils.char_of_string next_char]
-            | "fals" -> (Utils.list_init lst) @ ["f"; "a"; "l"; "s"; Utils.char_of_string next_char]
-            | "tr" -> (Utils.list_init lst) @ ["t"; "r"; Utils.char_of_string next_char]
-            | "tru" -> (Utils.list_init lst) @ ["t"; "r"; "u"; Utils.char_of_string next_char]
+            | x when String.length x > 1
+            && not (List.mem x ["!="; "=="; "print"; "while"; "if"; "int"; "string"; "boolean"; "false"; "true"]) ->
+                    let piece1 = Utils.list_init lst in
+                    let piece2 = Utils.string_of_string_list x in
+                    let piece3 = [Utils.char_of_string next_char] in
+                    piece1 @ piece2 @ piece3
             (* Base case... just create a new element *)
             | _ -> lst @ [Utils.char_of_string next_char]
         else
             lst @ [Utils.char_of_string next_char]
     in
     let token_possibles = List.rev (List.fold_right (on_char) (List.rev char_list) []) in
+    List.iter (print_endline) token_possibles;
     let on_token_possible next_token_possible tokens =
         (* special token used for lookup later *)
         let ds = T_Dollar_Sign {lineno=0; value="$"} in
@@ -164,7 +151,6 @@ let lex str =
                 | x when (Str.string_match char_regex x 0 && odd_quotes) -> tokens @ [T_Char token_data]
                 (* TODO handle lineno *)
                 | _ -> raise (UnrecognizedTokenError (next_token_possible, 0))
-        (* we must be in a string literal *)
     in
     List.fold_right on_token_possible token_possibles []
 ;;
