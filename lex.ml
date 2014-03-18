@@ -109,7 +109,6 @@ let lex str =
             lst @ [Utils.char_of_string next_char]
     in
     let token_possibles = List.rev (List.fold_right (on_char) (List.rev char_list) []) in
-    List.iter (print_endline) token_possibles;
     let on_token_possible next_token_possible tokens =
         log_trace ("Looking at " ^ next_token_possible);
         (* special token used for lookup later *)
