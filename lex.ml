@@ -113,7 +113,7 @@ let lex str =
     let on_token_possible next_token_possible tokens =
         log_trace ("Looking at " ^ next_token_possible);
         (* special token used for lookup later *)
-        let ds = T_Dollar_Sign {lineno=0; value="$"} in
+        let ds = T_Dollar_Sign {lineno=(-1); value="$"} in
         let odd_quotes = Utils.odd (List.length (List.filter (function | T_Double_Quote _ -> true | _ -> false) tokens)) in
         (* TODO handle lineno *)
         let token_data = {lineno=0; value=next_token_possible} in
