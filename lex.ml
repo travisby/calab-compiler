@@ -109,13 +109,13 @@ let lex str =
             lst @ [Utils.char_of_string next_char]
     in
     let token_possibles = List.rev (List.fold_right (on_char) (List.rev char_list) []) in
+    let line_count = ref 0 in
     let on_token_possible next_token_possible tokens =
         log_trace ("Looking at " ^ next_token_possible);
         (* special token used for lookup later *)
         let ds = T_Dollar_Sign {lineno=(-1); value="$"} in
         let odd_quotes = Utils.odd (List.length (List.filter (function | T_Double_Quote _ -> true | _ -> false) tokens)) in
-        (* TODO handle lineno *)
-        let token_data = {lineno=0; value=next_token_possible} in
+        let token_data = {lineno=(!line_count); value=next_token_possible} in
         if
             List.mem ds tokens
         then
@@ -145,10 +145,12 @@ let lex str =
                 | "$" -> tokens @ [ds]
                 | x when Str.string_match digit_regex x 0 -> tokens @ [T_Digit token_data]
                 | x when Str.string_match id_regex x 0 && not odd_quotes  -> tokens @ [T_Id token_data]
-                | x when Str.string_match whitespace_regex x 0 -> tokens
+                | x when Str.string_match newline_regex x 0 && not odd_quotes ->
+                        line_count := !line_count + 1;
+                        tokens
+                | x when Str.string_match whitespace_regex x 0 && not odd_quotes -> tokens
                 | x when (Str.string_match char_regex x 0 && odd_quotes) -> tokens @ [T_Char token_data]
-                (* TODO handle lineno *)
-                | _ -> raise (UnrecognizedTokenError (next_token_possible, 0))
+                | _ -> raise (UnrecognizedTokenError (next_token_possible, !line_count))
     in
     List.fold_right on_token_possible token_possibles []
 ;;
