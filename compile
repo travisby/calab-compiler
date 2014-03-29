@@ -1,6 +1,18 @@
-ocamlc -c utils.mli
-ocamlc -c lex.mli
-ocamlc -c data_structures/cst.mli
-ocamlc -c parse.mli
-ocamlc -c data_structures/symbol_table.mli
-ocamlc -I dynlink.cma unix.cma log.ml str.cma utils.ml lex.ml data_structures/cst.ml data_structures/symbol_table.ml parse.ml compiler.ml -o compiler -g
+ocamlc -c -I common common/utils.mli
+ocamlc -c -I common -I data_structures data_structures/cst.mli
+ocamlc -c -I common -I data_structures data_structures/symbol_table.mli
+ocamlc -c -I common -I data_structures -I frontend frontend/lex.mli
+ocamlc -c -I common -I data_structures -I frontend frontend/parse.mli
+ocamlc \
+    -I common -I data_structures -I frontend \
+    dynlink.cma \
+    unix.cma \
+    str.cma \
+    common/log.ml \
+    common/utils.ml \
+    data_structures/cst.ml \
+    data_structures/symbol_table.ml \
+    frontend/lex.ml \
+    frontend/parse.ml \
+    compiler.ml \
+-o compiler -g
