@@ -1,5 +1,0 @@
-level=trace
-filter=all
-layout=default
-output=file
-name=/dev/stdout
