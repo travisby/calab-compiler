@@ -1,0 +1,4 @@
+rm common/{utils,log}.{cmi,cmo}
+rm data_structures/{cst,symbol_table}.{cmi,cmo}
+rm frontend/{lex,parse}.{cmi,cmo}
+rm compiler{.{cmi,cmo},}
