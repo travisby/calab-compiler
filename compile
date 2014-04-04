@@ -1,8 +1,10 @@
 ocamlc -c -I common common/utils.mli
 ocamlc -c -I common -I data_structures data_structures/cst.mli
 ocamlc -c -I common -I data_structures data_structures/symbol_table.mli
+ocamlc -c -I common -I data_structures data_structures/ast.mli
 ocamlc -c -I common -I data_structures -I frontend frontend/lex.mli
 ocamlc -c -I common -I data_structures -I frontend frontend/parse.mli
+ocamlc -c -I common -I data_structures -I frontend frontend/semantic_analyzer.mli
 ocamlc \
     -I common -I data_structures -I frontend \
     dynlink.cma \
@@ -12,7 +14,9 @@ ocamlc \
     common/utils.ml \
     data_structures/cst.ml \
     data_structures/symbol_table.ml \
+    data_structures/ast.ml \
     frontend/lex.ml \
     frontend/parse.ml \
+    frontend/semantic_analyzer.ml \
     compiler.ml \
 -o compiler -g
