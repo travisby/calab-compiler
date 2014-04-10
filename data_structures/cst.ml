@@ -1,7 +1,7 @@
 type cst =
     | Program of cst * cst
     | Block of cst * cst * cst
-    | Emtpy_Statement_List
+    | Empty_Statement_List
     | Statement_List of cst * cst
     | Statement_Print_Statement of cst
     | Statement_Assignment_Statement of cst

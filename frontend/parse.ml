@@ -166,7 +166,7 @@ and parse_statement_list tokens =
             Statement_List (Statement_Block (block), statement_list)
     | _ -> 
             log_trace "Got empty statement list!";
-            Emtpy_Statement_List
+            Empty_Statement_List
 and parse_print_statement tokens =
     log_trace "Expecting print";
     match tokens#pop with

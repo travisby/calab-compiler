@@ -1,48 +1,50 @@
+let log_trace = Log.log_trace_func "semantic_analyzer";;
+let log_warn = Log.log_warn_func "semantic_analyzer";;
+let log_error = Log.log_error_func "semantic_analyzer";;
+
 let rec ast_of_cst cst = match cst with
-    | Cst.Program (block, _) -> raise Not_found
-    | Cst.Block (_, statement_list, _) -> raise Not_found
-    | Cst.Emtpy_Statement_List -> raise Not_found
-    | Cst.Statement_List (statement, statement_list) -> raise Not_found
-    | Cst.Statement_Print_Statement statement -> raise Not_found
-    | Cst.Statement_Assignment_Statement statement -> raise Not_found
-    | Cst.Statement_Var_Decl statement -> raise Not_found
-    | Cst.Statement_While_Statement statement -> raise Not_found
-    | Cst.Statement_If_Statement statement -> raise Not_found
-    | Cst.Statement_Block statement -> raise Not_found
-    | Cst.Print_Statement (_, expr, _) -> raise Not_found
-    | Cst.Assignment_Statement (id, _, value) -> raise Not_found
-    | Cst.Var_Decl (type_of, id) -> raise Not_found
-    | Cst.While_Statement (boolean_expr, block) -> raise Not_found
-    | Cst.If_Statement (boolean_expr, block) -> raise Not_found
-    | Cst.Expr_Int_Expr int_expr -> raise Not_found
-    | Cst.Expr_String_Expr string_expr -> raise Not_found
-    | Cst.Expr_Id_Expr id_expr -> raise Not_found
-    | Cst.Expr_Boolean_Expr boolean_expr -> raise Not_found
-    | Cst.Int_Expr (digit, intop, expr) -> raise Not_found
-    | Cst.String_Expr (_, char_list, _) -> raise Not_found
-    | Cst.Boolean_Expr (_, expr1, boolop, expr2, _) -> raise Not_found
-    | Cst.Id char_of_id -> raise Not_found
-    | Cst.Char_List (_char, char_list) -> raise Not_found
-    | Cst.Empty_Char_List -> raise Not_found
-    | Cst.Int -> raise Not_found
-    | Cst.String -> raise Not_found
-    | Cst.Boolean -> raise Not_found
-    | Cst.Char _char -> raise Not_found
-    | Cst.Space -> raise Not_found
-    | Cst.Digit string_of_int -> raise Not_found
-    | Cst.Equal -> raise Not_found
-    | Cst.Not_Equal -> raise Not_found
-    | Cst.False -> raise Not_found
-    | Cst.True -> raise Not_found
-    | Cst.Plus -> raise Not_found
-    | Cst.Dollar_Sign -> raise Not_found
-    | Cst.Open_Brace -> raise Not_found
-    | Cst.Close_Brace -> raise Not_found
-    | Cst.Open_Paren -> raise Not_found
-    | Cst.Close_Paren -> raise Not_found
-    | Cst.Equals -> raise Not_found
-    | Cst.While -> raise Not_found
-    | Cst.If -> raise Not_found
-    | Cst.Quote -> raise Not_found
-    | Cst.Null -> raise Not_found (* USED INTERNALLY *)
+    | Cst.Program (block, _) -> Ast.Program (ast_of_cst block)
+    | Cst.Block (_, statement_list, _) ->
+            let rec get_all_statements xs = match xs with
+                | Cst.Empty_Statement_List -> []
+                | Cst.Statement_List (x, xs) -> [ast_of_cst x] @ (get_all_statements xs)
+                (* Pretty please don't use this function for anything else *)
+                | _ -> raise Not_found
+            in Ast.Block (get_all_statements statement_list)
+    | Cst.Statement_Print_Statement statement
+        | Cst.Statement_Assignment_Statement statement
+        | Cst.Statement_Var_Decl statement
+        | Cst.Statement_While_Statement statement
+        | Cst.Statement_If_Statement statement
+        | Cst.Statement_Block statement
+    -> ast_of_cst statement
+    | Cst.Print_Statement (_, expr, _) -> Ast.Print_Statement (ast_of_cst expr)
+    | Cst.Assignment_Statement (id, _, value) -> Ast.Assignment_Statement (ast_of_cst id, ast_of_cst value)
+    | Cst.Var_Decl (type_of, id) -> Ast.Var_Decl (ast_of_cst type_of, ast_of_cst id)
+    | Cst.While_Statement (boolean_expr, block) -> Ast.While_Statement (ast_of_cst boolean_expr, ast_of_cst block)
+    | Cst.If_Statement (boolean_expr, block) -> Ast.If_Statement (ast_of_cst boolean_expr, ast_of_cst block)
+    | Cst.Expr_Int_Expr expr
+        | Cst.Expr_String_Expr expr
+        | Cst.Expr_Id_Expr expr
+        | Cst.Expr_Boolean_Expr expr
+    -> ast_of_cst expr
+    (* Only plus exists in our language *)
+    | Cst.Int_Expr (digit, intop, expr) when intop = Cst.Plus -> Ast.Addition (ast_of_cst digit, ast_of_cst expr)
+    | Cst.String_Expr (_, char_list, _) ->
+            let rec get_all_chars xs = match xs with
+                | Cst.Empty_Char_List -> []
+                | Cst.Char_List (x, xs) -> [ast_of_cst x] @ (get_all_chars xs)
+                (* Pretty please don't use this function for anything else *)
+                | _ -> raise Not_found
+            in Ast.Char_List (get_all_chars char_list)
+    | Cst.Boolean_Expr (_, expr1, boolop, expr2, _) when boolop = Cst.Equal -> Ast.Equallity_Test (ast_of_cst expr1, ast_of_cst expr2)
+    | Cst.Boolean_Expr (_, expr1, boolop, expr2, _) when boolop = Cst.Not_Equal -> Ast.Inequallity_Test (ast_of_cst expr1, ast_of_cst expr2)
+    | Cst.Id char_of_id -> Ast.Id char_of_id
+    | Cst.Int -> Ast.Int
+    | Cst.String -> Ast.String
+    | Cst.Boolean -> Ast.Boolean
+    | Cst.Char _char -> Ast.Char _char
+    | Cst.Space -> Ast.Char ' '
+    | Cst.Digit string_of_int -> Ast.Digit (int_of_string string_of_int)
+    | _ -> raise Not_found
 ;;
