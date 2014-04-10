@@ -19,8 +19,7 @@ class ['a, 'b] table =
             if
                 not (self#mem x)
             then
-                (* raise Does_Not_Exist_In_Table *)
-                Hashtbl.add t x y
+                raise Does_Not_Exist_In_Table
             else
                 Hashtbl.replace t x y
     end

@@ -6,5 +6,4 @@ exception Expected_Something_Else of string * Lex.token
 (** General error TODO Replace *)
 exception CompilerError
 (** Our Concrete Syntax Tree *)
-val parse : Lex.token list -> Cst.cst * Symbol_table.symboltable (** Create the Concrete Syntax
-Tree, and Symbol Table from a list of tokens *)
+val parse : Lex.token list -> Cst.cst (** Create the Concrete Syntax Tree, and Symbol Table from a list of tokens *)

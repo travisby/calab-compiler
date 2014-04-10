@@ -1,5 +1,4 @@
 open Lex;;
-open Symbol_table;;
 open Cst;;
 
 exception Expected_Something_Else of string * token;;
@@ -38,30 +37,14 @@ let log_error = Log.log_error_func "parse";;
  *)
 let rec parse tokens =
     try
-        let cst = parse_program (new queue tokens) in
-        let symboltable = new symboltable in
-        (* Make sure we do this before returning... *)
-        let _ = symboltable_of_cst ~st:symboltable cst in
-        (cst, symboltable)
+        parse_program (new queue tokens)
     with x -> match x with
         | Expected_Something_Else (expected, actual) ->
                 log_error ("Expected " ^ expected ^ " but got " ^ (token_as_string actual));
                 raise x
-        | Already_Exists_In_table ->
-                log_error "Cannot redeclare variable";
-                raise x
         | CompilerError ->
                 log_error "Unknown compiler error";
                 raise x 
-        | CannotExitGlobalScope ->
-                log_error "Cannot exit global scope in symbol table";
-                raise x
-        | IncorrectCSTElementsInSymbolTableError ->
-                log_error "Incorrect elements were passed into the symbol table functions";
-                raise x
-        | Does_Not_Exist_In_Table ->
-                log_error "Variable was not declared before assigned";
-                raise x
         | _ -> raise x
 and parse_program tokens =
     log_trace "Expecting Program";
@@ -360,37 +343,4 @@ and parse_dollar_sign tokens =
             log_trace "Got $!";
             Dollar_Sign
     | x -> raise (Expected_Something_Else("dollar sign", x))
-and symboltable_of_cst ?(st=new symboltable) tree  = match tree with
-    | Program (x, _) ->
-            symboltable_of_cst ~st x
-    | Block (_, xs, _) ->
-            log_trace "Entering new scope";
-            st#enter;
-            symboltable_of_cst ~st xs;
-            log_trace "Exiting current scope";
-            st#exit
-    | Statement_List (x, xs) ->
-            symboltable_of_cst ~st x;
-            symboltable_of_cst ~st xs
-    | Statement_Var_Decl x ->
-            symboltable_of_cst ~st x
-    | Statement_While_Statement x ->
-            symboltable_of_cst ~st x
-    | Statement_If_Statement x ->
-            symboltable_of_cst ~st x
-    | Statement_Block x ->
-            symboltable_of_cst ~st x
-    | Var_Decl (_type, name) ->
-            log_trace "Adding var to the symbol table";
-            st#add name _type
-    | While_Statement (_, x) ->
-            symboltable_of_cst ~st x
-    | If_Statement (_, x) ->
-            symboltable_of_cst ~st x
-    | Statement_Assignment_Statement x ->
-            symboltable_of_cst ~st x
-    | Assignment_Statement (id, _, _val) ->
-            log_trace "Setting var into symbol table";
-            st#set id _val
-    | _ -> ()
 ;;

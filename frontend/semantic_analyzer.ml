@@ -48,3 +48,37 @@ let rec ast_of_cst cst = match cst with
     | Cst.Digit string_of_int -> Ast.Digit (int_of_string string_of_int)
     | _ -> raise Not_found
 ;;
+
+let rec symboltable_of_cst ?(st=new Symbol_table.symboltable) tree  = match tree with
+    | Cst.Program (x, _) ->
+            symboltable_of_cst ~st x
+    | Cst.Block (_, xs, _) ->
+            log_trace "Entering new scope";
+            st#enter;
+            symboltable_of_cst ~st xs;
+            log_trace "Exiting current scope";
+            st#exit
+    | Cst.Statement_List (x, xs) ->
+            symboltable_of_cst ~st x;
+            symboltable_of_cst ~st xs
+    | Cst.Statement_Var_Decl x ->
+            symboltable_of_cst ~st x
+    | Cst.Statement_While_Statement x ->
+            symboltable_of_cst ~st x
+    | Cst.Statement_If_Statement x ->
+            symboltable_of_cst ~st x
+    | Cst.Statement_Block x ->
+            symboltable_of_cst ~st x
+    | Cst.Var_Decl (_type, name) ->
+            log_trace "Adding var to the symbol table";
+            st#add name _type
+    | Cst.While_Statement (_, x) ->
+            symboltable_of_cst ~st x
+    | Cst.If_Statement (_, x) ->
+            symboltable_of_cst ~st x
+    | Cst.Statement_Assignment_Statement x ->
+            symboltable_of_cst ~st x
+    | Cst.Assignment_Statement (id, _, _val) ->
+            log_trace "Setting var into symbol table";
+            st#set id _val
+    | _ -> ()
