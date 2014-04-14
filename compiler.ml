@@ -13,6 +13,14 @@ with x -> match x with
             print_endline karet_at;
             print_endline "--------------------------";
             raise x
+    | Symbol_table.Already_Exists_In_table ->
+            print_endline "--------------------------";
+            print_endline "Item already exists in table";
+            raise x
+    | Symbol_table.Does_Not_Exist_In_Table ->
+            print_endline "--------------------------";
+            print_endline "Undeclared variable";
+            raise x
     | x ->
         print_newline ();
         print_string "Cannot recover.  Exitting";

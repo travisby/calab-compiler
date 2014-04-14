@@ -3,6 +3,8 @@ exception CannotExitGlobalScope;;
 exception IncorrectCSTElementsInSymbolTableError;;
 exception Does_Not_Exist_In_Table;;
 
+let log_error = Log.log_error_func "symbol_table"
+
 class ['a, 'b] table =
     object (self)
         val mutable t = Hashtbl.create 0
@@ -12,14 +14,20 @@ class ['a, 'b] table =
             if
                 self#mem x
             then
-                raise Already_Exists_In_table
+                begin
+                    log_error ("Symbol is already declared");
+                    raise Already_Exists_In_table
+                end
             else
                 Hashtbl.add t x y
         method set (x: 'a) (y: 'b) =
             if
                 not (self#mem x)
             then
-                raise Does_Not_Exist_In_Table
+                begin
+                    log_error ("Symbol not declared");
+                    raise Does_Not_Exist_In_Table
+                end
             else
                 Hashtbl.replace t x y
     end
