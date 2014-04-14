@@ -83,4 +83,7 @@ let rec symboltable_of_cst ?(st=new Symbol_table.symboltable) tree  = match tree
             st#set id _val
     | _ -> ()
 
-let analyze cst = ()
+let analyze cst =
+    let _ = symboltable_of_cst cst in
+    let _ = ast_of_cst cst in
+    ()
