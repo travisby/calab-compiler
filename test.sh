@@ -1,3 +1,5 @@
+./clean
+./compile
 for expected in `ls assignment2_examples/`
 do
     echo '-------------------------------';
