@@ -69,11 +69,11 @@ class symboltable =
             in
             let _ = current_scope <- parent_scope in
             ()
-        (* TODO worry about type *)
+
         method add id _type = match id, _type with
-            | Cst.Id x, Cst.Int -> !(self#get_current_table)#add x Cst.Null
-            | Cst.Id x, Cst.Boolean -> !(self#get_current_table)#add x Cst.Null
-            | Cst.Id x, Cst.String -> !(self#get_current_table)#add x Cst.Null
+            | Cst.Id x, Cst.Int -> !(self#get_current_table)#add x Cst.Int
+            | Cst.Id x, Cst.Boolean -> !(self#get_current_table)#add x Cst.Boolean
+            | Cst.Id x, Cst.String -> !(self#get_current_table)#add x Cst.String
             | _, _ -> raise IncorrectCSTElementsInSymbolTableError
         method set id _val = match id with
             | Cst.Id x ->
