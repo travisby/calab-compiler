@@ -1,7 +1,7 @@
 let file_name = Array.get Sys.argv 1 in
 let file_string = Utils.file_name_to_string file_name in
 print_endline "Started compiler";
-try Parse.parse (Lex.lex file_string)
+try Semantics.analyze (Parse.parse (Lex.lex file_string))
 with x -> match x with
     |  Lex.UnrecognizedTokenError (token, lineno, charno) ->
             let file_by_lines = Str.split (Str.regexp "\n") file_string in

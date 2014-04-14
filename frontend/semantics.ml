@@ -82,3 +82,5 @@ let rec symboltable_of_cst ?(st=new Symbol_table.symboltable) tree  = match tree
             log_trace "Setting var into symbol table";
             st#set id _val
     | _ -> ()
+
+let analyze cst = ()
