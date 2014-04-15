@@ -82,15 +82,14 @@ class symboltable =
         method add id _type = match id with
             | Cst.Id x -> !(self#get_current_table)#add x {typeof=_type; is_assigned=false; is_used=false}
             | _ -> raise IncorrectCSTElementsInSymbolTableError
-        method assign id = match id with
+        method private get_symbol_table scope = match scope with
+            | Scope (t, _, _) -> t
+            | Global (t, _) -> t
+        method private get_containing_st_pointer id = match id with
             | Cst.Id x ->
                     let get_parent scope = match scope with
                         | Scope (_, _, x) -> x
                         | Global (_, _) -> raise CannotExitGlobalScope
-                    in
-                    let get_symbol_table scope = match scope with
-                        | Scope (t, _, _) -> t
-                        | Global (t, _) -> t
                     in
                     (* reference to the dereference just allows us to have a mutable property *)
                     let temp_scope_pointer = ref !current_scope in
@@ -99,16 +98,26 @@ class symboltable =
                      * scope.  Let it error here if it wants.  Also stop if we
                      * the value exists here!
                      *)
-                    while (temp_scope_pointer <> head && not ((get_symbol_table !temp_scope_pointer)#mem x)) do
+                    while (temp_scope_pointer <> head && not ((self#get_symbol_table !temp_scope_pointer)#mem x)) do
                         (* ocaml will only take a dereference... *)
                         temp_scope_pointer := !(get_parent !temp_scope_pointer)
                     done;
+                    temp_scope_pointer
+            | _ -> raise IncorrectCSTElementsInSymbolTableError
+        method private get_id id = match id with
+            | Cst.Id x ->
+                    let temp_scope_pointer = self#get_containing_st_pointer id in
+                    ref ((self#get_symbol_table !temp_scope_pointer)#get x)
+            | _ -> raise IncorrectCSTElementsInSymbolTableError
+        method assign id = match id with
+            | Cst.Id x ->
                     (*
                      * Even if we didn't find the correct location, that's OK.
                      * The table will throw the error we want
                      *)
-                    let symbol = (get_symbol_table !temp_scope_pointer)#get x in
-                    (get_symbol_table !temp_scope_pointer)#set x {typeof=symbol.typeof; is_assigned=true; is_used=symbol.is_used}
+                    let temp_scope_pointer = self#get_containing_st_pointer id in
+                    let symbol = !(self#get_id id) in
+                    (self#get_symbol_table !temp_scope_pointer)#set x {typeof=symbol.typeof; is_assigned=true; is_used=symbol.is_used}
             | _ -> raise IncorrectCSTElementsInSymbolTableError
         method use id = match id with
             | Cst.Id x -> ()
