@@ -37,10 +37,11 @@ class ['a, 'b] table =
  * We use an array because it is a mutable data structure.
  * We will be appending to the array to "add" new scopes
  *)
-type scope =
-    | Global of (char, Cst.cst) table * scope array
+type st_entree = { typeof: Cst.cst; is_assigned : bool; is_used : bool}
+and scope =
+    | Global of (char, st_entree) table * scope array
     (* The last parameter is the parent scope *)
-    | Scope of (char, Cst.cst) table * scope array * scope ref
+    | Scope of (char, st_entree) table * scope array * scope ref
 ;;
 
 class symboltable =
@@ -78,12 +79,10 @@ class symboltable =
             let _ = current_scope <- parent_scope in
             ()
 
-        method add id _type = match id, _type with
-            | Cst.Id x, Cst.Int -> !(self#get_current_table)#add x Cst.Int
-            | Cst.Id x, Cst.Boolean -> !(self#get_current_table)#add x Cst.Boolean
-            | Cst.Id x, Cst.String -> !(self#get_current_table)#add x Cst.String
-            | _, _ -> raise IncorrectCSTElementsInSymbolTableError
-        method set id _val = match id with
+        method add id _type = match id with
+            | Cst.Id x -> !(self#get_current_table)#add x {typeof=_type; is_assigned=false; is_used=false}
+            | _ -> raise IncorrectCSTElementsInSymbolTableError
+        method assign id = match id with
             | Cst.Id x ->
                     let get_parent scope = match scope with
                         | Scope (_, _, x) -> x
@@ -108,7 +107,11 @@ class symboltable =
                      * Even if we didn't find the correct location, that's OK.
                      * The table will throw the error we want
                      *)
-                    (get_symbol_table !temp_scope_pointer)#set x _val
+                    let symbol = (get_symbol_table !temp_scope_pointer)#get x in
+                    (get_symbol_table !temp_scope_pointer)#set x {typeof=symbol.typeof; is_assigned=true; is_used=symbol.is_used}
+            | _ -> raise IncorrectCSTElementsInSymbolTableError
+        method use id = match id with
+            | Cst.Id x -> ()
             | _ -> raise IncorrectCSTElementsInSymbolTableError
     end
 ;;

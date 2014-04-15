@@ -80,7 +80,7 @@ let rec symboltable_of_cst ?(st=new Symbol_table.symboltable) tree  = match tree
             symboltable_of_cst ~st x
     | Cst.Assignment_Statement (id, _, _val) ->
             log_trace "Setting var into symbol table";
-            st#set id _val
+            st#assign id
     | _ -> ()
 
 let analyze cst =
