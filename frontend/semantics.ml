@@ -50,8 +50,6 @@ let rec ast_of_cst cst = match cst with
 ;;
 
 let rec symboltable_of_cst ?(st=new Symbol_table.symboltable) tree  = match tree with
-    | Cst.Program (x, _) ->
-            symboltable_of_cst ~st x
     | Cst.Block (_, xs, _) ->
             log_trace "Entering new scope";
             st#enter;
@@ -61,29 +59,42 @@ let rec symboltable_of_cst ?(st=new Symbol_table.symboltable) tree  = match tree
     | Cst.Statement_List (x, xs) ->
             symboltable_of_cst ~st x;
             symboltable_of_cst ~st xs
-    | Cst.Statement_Var_Decl x ->
-            symboltable_of_cst ~st x
-    | Cst.Statement_While_Statement x ->
-            symboltable_of_cst ~st x
-    | Cst.Statement_If_Statement x ->
-            symboltable_of_cst ~st x
-    | Cst.Statement_Block x ->
-            symboltable_of_cst ~st x
-    | Cst.Var_Decl (_type, name) ->
-            log_trace "Adding var to the symbol table";
-            st#add name _type
-    | Cst.While_Statement (_, x) ->
-            symboltable_of_cst ~st x
-    | Cst.If_Statement (_, x) ->
-            symboltable_of_cst ~st x
-    | Cst.Statement_Assignment_Statement x ->
-            symboltable_of_cst ~st x
     | Cst.Assignment_Statement (id, _, _val) ->
             log_trace "Setting var into symbol table";
             st#assign id
+    | Cst.Var_Decl (_type, name) ->
+            log_trace "Adding var to the symbol table";
+            st#add name _type
+    | Cst.Boolean_Expr (_, x, _, y, _) ->
+            symboltable_of_cst ~st x;
+            symboltable_of_cst ~st y
+    | Cst.Expr_Id_Expr x ->
+            begin
+                match x with
+                    | Cst.Id y ->
+                            log_trace "Using a var";
+                            st#use x
+                    | _ ->
+                            log_trace "SOMETHING BROKED";
+                            raise Not_found
+            end
+    | Cst.Program (x, _)
+        | Cst.Statement_Print_Statement x
+        | Cst.Statement_Assignment_Statement x
+        | Cst.Statement_Var_Decl x
+        | Cst.Statement_While_Statement x
+        | Cst.Statement_If_Statement x
+        | Cst.Statement_Block x
+        | Cst.While_Statement (_, x)
+        | Cst.If_Statement (_, x)
+        | Cst.Expr_Int_Expr x
+        | Cst.Expr_String_Expr x
+        | Cst.Expr_Boolean_Expr x
+        | Cst.Print_Statement (_, x, _)
+        | Cst.Int_Expr (_, _, x) ->
+        symboltable_of_cst ~st x
     | _ -> ()
 
 let analyze cst =
     let _ = symboltable_of_cst cst in
-    let _ = ast_of_cst cst in
     ()

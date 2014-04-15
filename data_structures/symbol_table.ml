@@ -103,6 +103,18 @@ class symboltable =
                         (* ocaml will only take a dereference... *)
                         temp_scope_pointer := !(get_parent !temp_scope_pointer)
                     done;
+                    let id_char = match id with
+                        | Cst.Id x -> x
+                        | _ -> raise Not_found
+                    in
+                    if
+                        not ((self#get_symbol_table !temp_scope_pointer)#mem id_char)
+                    then
+                        begin
+                            log_error ("Symbol not declared");
+                            raise Does_Not_Exist_In_Table
+                        end
+                    else ();
                     temp_scope_pointer
             | _ -> raise IncorrectCSTElementsInSymbolTableError
         method private get_id id = match id with
