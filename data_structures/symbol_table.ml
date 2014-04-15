@@ -4,6 +4,7 @@ exception IncorrectCSTElementsInSymbolTableError;;
 exception Does_Not_Exist_In_Table;;
 
 let log_error = Log.log_error_func "symbol_table"
+let log_warn = Log.log_warn_func "symbol_table"
 
 class ['a, 'b] table =
     object (self)
@@ -120,7 +121,17 @@ class symboltable =
                     (self#get_symbol_table !temp_scope_pointer)#set x {typeof=symbol.typeof; is_assigned=true; is_used=symbol.is_used}
             | _ -> raise IncorrectCSTElementsInSymbolTableError
         method use id = match id with
-            | Cst.Id x -> ()
+            | Cst.Id x ->
+                    let temp_scope_pointer = self#get_containing_st_pointer id in
+                    let symbol = !(self#get_id id) in
+                    if
+                        (not symbol.is_assigned)
+                    then
+                        log_warn "Unassigned Variable"
+                    else
+                        ()
+                    ;
+                    (self#get_symbol_table !temp_scope_pointer)#set x {typeof=symbol.typeof; is_assigned=symbol.is_assigned; is_used=true}
             | _ -> raise IncorrectCSTElementsInSymbolTableError
     end
 ;;
