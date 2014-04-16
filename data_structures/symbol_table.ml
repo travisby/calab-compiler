@@ -31,6 +31,7 @@ class ['a, 'b] table =
                 end
             else
                 Hashtbl.replace t x y
+        method all () = Hashtbl.fold (fun key value acc -> (key, value) :: acc) t []
     end
 ;;
 
