@@ -29,9 +29,19 @@ let analyze cst =
                         end
                     in
                     let statements = gathered_statements statement_list in
+                    (*
+                     * Word of warning!
+                     * ----------------
+                     *
+                     * statements_as_ast will force execution of adding stuff
+                     * to the symbol table.  If this isn't before
+                     * st#warn_on_unused... then the Symbol Table will always be
+                     * empty, because nothing has filled it yet!
+                     *)
+                    let statements_as_ast = List.map inner_func statements in
                     st#warn_on_unused_in_current_scope;
                     st#exit;
-                    Block (List.map inner_func statements)
+                    Block statements_as_ast
             (* These should be handled in Block *)
             | Cst.Statement_List (_, _) -> raise Not_found
             | Cst.Empty_Statement_List -> raise Not_found
