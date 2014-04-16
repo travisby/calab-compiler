@@ -21,6 +21,10 @@ with x -> match x with
             print_endline "--------------------------";
             print_endline "Undeclared variable";
             raise x
+    | Semantics.Type_Error ->
+            print_endline "--------------------------";
+            print_endline "Type Error";
+            raise x
     | x ->
         print_newline ();
         print_string "Cannot recover.  Exitting";

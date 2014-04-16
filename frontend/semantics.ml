@@ -1,3 +1,5 @@
+exception Type_Error;;
+
 open Ast;;
 
 let log_trace = Log.log_trace_func "semantic_analyzer";;
