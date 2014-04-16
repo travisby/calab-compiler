@@ -154,7 +154,7 @@ class symboltable =
         method warn_on_unused_in_current_scope =
             let table = self#get_symbol_table !current_scope in
             let symbols = table#all () in
-            let unused_symbols = List.filter (fun (key, value) -> value.is_used) symbols in
+            let unused_symbols = List.filter (fun (key, value) -> not value.is_used) symbols in
             List.iter (fun _ -> log_warn "Unused variable") unused_symbols
     end
 ;;
