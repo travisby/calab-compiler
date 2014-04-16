@@ -29,6 +29,7 @@ let analyze cst =
                         end
                     in
                     let statements = gathered_statements statement_list in
+                    st#warn_on_unused_in_current_scope;
                     st#exit;
                     Block (List.map inner_func statements)
             (* These should be handled in Block *)
