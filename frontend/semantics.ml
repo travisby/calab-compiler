@@ -45,18 +45,24 @@ let analyze cst =
                     begin
                         st#assign id;
                         let typeof = st#get_type_of id in
+                        let ast_id = match id with
+                            | Cst.Id x -> Ast.Id x
+                            | _ -> raise Not_found
+                        in
                         let value = inner_func value in
                         let assignment_statement = Assignment_Statement (inner_func id, value) in
                         match value with
                             | Addition _ when typeof = Cst.Int -> assignment_statement
-                                | Digit _ when typeof = Cst.Int -> assignment_statement
-                                | Char_List _ when typeof = Cst.String -> assignment_statement
-                                | Equallity_Test _ when typeof = Cst.Boolean -> assignment_statement
-                                | Inequallity_Test _ when typeof = Cst.Boolean -> assignment_statement
-                                | True when typeof = Cst.Boolean -> assignment_statement
-                                | False when typeof = Cst.Boolean -> assignment_statement
-                                | Id x when typeof = (st#get_type_of (Cst.Id x)) -> assignment_statement
-                            | _ -> raise Type_Error
+                            | Digit _ when typeof = Cst.Int -> assignment_statement
+                            | Char_List _ when typeof = Cst.String -> assignment_statement
+                            | Equallity_Test _ when typeof = Cst.Boolean -> assignment_statement
+                            | Inequallity_Test _ when typeof = Cst.Boolean -> assignment_statement
+                            | True when typeof = Cst.Boolean -> assignment_statement
+                            | False when typeof = Cst.Boolean -> assignment_statement
+                            | Id x when typeof = (st#get_type_of (Cst.Id x)) -> assignment_statement
+                            | x ->
+                                    log_error ("Type Error.  Cannot assign  " ^ string_of_ast ast_id ^ " to " ^ string_of_ast x);
+                                    raise Type_Error
                     end
             | Cst.Var_Decl (typeof, id) ->
                     st#add id typeof;
@@ -72,10 +78,15 @@ let analyze cst =
             | Cst.Int_Expr (digit, _, expr) ->
                     begin
                         let expr = inner_func expr in
+                        let digit2 = inner_func digit in
                         match expr with
                             | Addition _
-                                | Digit _ -> Addition (inner_func digit, expr)
-                            | _ -> raise Type_Error
+                                | Digit _
+                            -> Addition (inner_func digit, expr)
+                                | Id x when st#get_type_of (Cst.Id x) = Cst.Int -> Addition (inner_func digit, expr)
+                            | _ ->
+                                    log_error ("Type Error.  Cannot add  " ^ string_of_ast digit2 ^ " to " ^ string_of_ast expr);
+                                    raise Type_Error
                     end
             | Cst.String_Expr (_, char_list, _) ->
                     let rec gathered_chars cl = 
@@ -120,7 +131,9 @@ let analyze cst =
                             | Id x, False when (st#get_type_of (Cst.Id x)) = Cst.Boolean -> Equallity_Test (expr1, expr2)
                             | Id x, Equallity_Test _ when (st#get_type_of (Cst.Id x)) = Cst.Boolean -> Equallity_Test (expr1, expr2)
                             | Id x, Inequallity_Test _ when (st#get_type_of (Cst.Id x)) = Cst.Boolean -> Equallity_Test (expr1, expr2)
-                            | _ -> raise Type_Error
+                            | x, y ->
+                                    log_error ("Type Error.  Cannot compare  " ^ string_of_ast x ^ " and " ^ string_of_ast y);
+                                    raise Type_Error
                         end
             | Cst.Boolean_Expr (_, expr1, boolop, expr2, _) when boolop = Cst.Not_Equal ->
                     Inequallity_Test (inner_func expr1, inner_func expr2)
