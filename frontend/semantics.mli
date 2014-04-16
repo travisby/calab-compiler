@@ -1,1 +1,1 @@
-val analyze : Cst.cst -> unit
+val analyze : Cst.cst -> Ast.ast
