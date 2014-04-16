@@ -17,3 +17,5 @@ type ast =
   | Inequallity_Test of ast * ast
   | Char of char
   | Digit of int
+  | True
+  | False

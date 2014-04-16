@@ -76,5 +76,7 @@ let analyze cst =
             | Cst.Char x -> Char x
             | Cst.Space -> Char ' '
             | Cst.Digit d -> Digit (int_of_string d)
+            | Cst.True -> True
+            | Cst.False -> False
             | _ -> raise Not_found
     in inner_func cst
