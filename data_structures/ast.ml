@@ -20,14 +20,43 @@ type ast =
     | True | False
 ;;
 
-let rec string_of_ast ast = match ast with
-    | Program _ -> (* TODO *) raise Not_found
-    | Block _ -> (* TODO *) raise Not_found
-    | Print_Statement _ -> (* TODO *) raise Not_found
+let rec string_of_ast ?(indent="") ast = match ast with
+    | Program x ->
+            "\n"
+            ^ indent
+            ^ "Program"
+            ^ (string_of_ast ~indent:(indent ^ "    ") x)
+    | Block xs ->
+            let strings_of_xs = List.map (string_of_ast ~indent:(indent ^ " ")) xs in
+            "\n"
+            ^ indent
+            ^ "Block"
+            ^ (String.concat "" strings_of_xs)
+    | Print_Statement x ->
+            "\n"
+            ^ indent
+            ^ "Print"
+            ^ (string_of_ast ~indent:(indent ^ "    ") x)
     | Assignment_Statement (x, y) -> (string_of_ast x) ^ " = " ^ (string_of_ast y)
     | Var_Decl (x, y) -> (string_of_ast x) ^ " " ^ (string_of_ast y)
-    | While_Statement _ -> (*TODO *) raise Not_found
-    | If_Statement _ -> (*TODO *) raise Not_found
+    | While_Statement (x, y) ->
+            "\n"
+            ^ indent
+            ^ "While"
+            ^ (string_of_ast ~indent:(indent ^ "    ") x)
+            ^ "\n"
+            ^ indent
+            ^ "Do"
+            ^ (string_of_ast ~indent:(indent ^ "    ") y)
+    | If_Statement (x, y) ->
+            "\n"
+            ^ indent
+            ^ "If"
+            ^ (string_of_ast ~indent:(indent ^ "    ") x)
+            ^ "\n"
+            ^ indent
+            ^ "Then"
+            ^ (string_of_ast ~indent:(indent ^ "    ") y)
     | Int -> "Int"
     | Boolean -> "Boolean"
     | String -> "String"

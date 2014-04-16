@@ -19,4 +19,4 @@ type ast =
   | Digit of int
   | True
   | False
-val string_of_ast : ast -> string
+val string_of_ast : ?indent:string -> ast -> string
