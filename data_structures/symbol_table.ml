@@ -145,6 +145,11 @@ class symboltable =
                     ;
                     (self#get_symbol_table !temp_scope_pointer)#set x {typeof=symbol.typeof; is_assigned=symbol.is_assigned; is_used=true}
             | _ -> raise IncorrectCSTElementsInSymbolTableError
+        method get_type_of id = match id with
+            | Cst.Id x ->
+                    let symbol = !(self#get_id id) in
+                    symbol.typeof
+            | _ -> raise IncorrectCSTElementsInSymbolTableError
     end
 ;;
 

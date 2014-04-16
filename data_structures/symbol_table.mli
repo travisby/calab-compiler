@@ -10,4 +10,5 @@ class symboltable :
     method exit : unit
     method assign : Cst.cst -> unit
     method use : Cst.cst -> unit
+    method get_type_of : Cst.cst -> Cst.cst
   end
