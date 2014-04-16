@@ -8,7 +8,7 @@ let log_warn = Log.log_warn_func "symbol_table"
 
 class ['a, 'b] table =
     object (self)
-        val mutable t = Hashtbl.create 0
+        val t = Hashtbl.create 0
         method mem x = Hashtbl.mem t x
         method get x = Hashtbl.find t x
         method add (x:'a) (y:'b) =
