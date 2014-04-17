@@ -1,3 +1,5 @@
+open Utils;;
+
 type st_entree = { typeof: Cst.cst; is_assigned : bool; is_used : bool; pos:Utils.pos}
 
 exception Already_Exists_In_table of st_entree * st_entree;;
@@ -137,7 +139,7 @@ class symboltable =
                     if
                         (not symbol.is_assigned)
                     then
-                        log_warn "Unassigned Variable"
+                        log_warn ("Unassigned Variable being used on line " ^ (string_of_int symbol.pos.lineno))
                     else
                         ()
                     ;
