@@ -10,8 +10,12 @@ print_endline "Started compiler";
 try
     let tokens = Lex.lex file_string in
     let cst = Parse.parse tokens in
+    let cst_string = Cst.string_of_cst cst in
+    log_info "Printing the CST";
+    log_info cst_string;
     let ast = Semantics.analyze cst in
     let ast_string = Ast.string_of_ast ast in
+    log_info "Printing the AST";
     log_info ast_string
 with x -> match x with
     |  Lex.UnrecognizedTokenError (token, lineno, charno) ->

@@ -45,3 +45,5 @@ type cst =
   | If of Utils.pos
   | Quote of Utils.pos
   | Null (** USED INTERNALLY *)
+
+val string_of_cst : ?indent:string -> cst -> string
