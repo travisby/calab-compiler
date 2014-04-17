@@ -2,10 +2,17 @@ open Symbol_table;;
 open Utils;;
 open Semantics;;
 
+let log_info = Log.log_info_func "compiler";;
+
 let file_name = Array.get Sys.argv 1 in
 let file_string = Utils.file_name_to_string file_name in
 print_endline "Started compiler";
-try Semantics.analyze (Parse.parse (Lex.lex file_string))
+try
+    let tokens = Lex.lex file_string in
+    let cst = Parse.parse tokens in
+    let ast = Semantics.analyze cst in
+    let ast_string = Ast.string_of_ast ast in
+    log_info ast_string
 with x -> match x with
     |  Lex.UnrecognizedTokenError (token, lineno, charno) ->
             let file_by_lines = Str.split (Str.regexp "\n") file_string in
