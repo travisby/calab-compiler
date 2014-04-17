@@ -9,6 +9,7 @@ exception Does_Not_Exist_In_Table of st_entree;;
 
 let log_error = Log.log_error_func "symbol_table"
 let log_warn = Log.log_warn_func "symbol_table"
+let log_trace = Log.log_trace_func "symbol_table"
 
 class ['a, 'b] table =
     object (self)
@@ -24,7 +25,10 @@ class ['a, 'b] table =
                     raise (Already_Exists_In_table ((self#get x), y))
                 end
             else
-                Hashtbl.add t x y
+                begin
+                    log_trace ("Adding identifier " ^ (Char.escaped x) ^ " to symbol table from line " ^ (string_of_int y.pos.lineno));
+                    Hashtbl.add t x y
+                end
         method set (x: 'a) (y: 'b) =
             if
                 not (self#mem x)
@@ -130,6 +134,7 @@ class symboltable =
                      *)
                     let temp_scope_pointer = self#get_containing_st_pointer id in
                     let symbol = !(self#get_id id) in
+                    log_trace ("Assigning identifier " ^ (Char.escaped x));
                     (self#get_symbol_table !temp_scope_pointer)#set x {typeof=symbol.typeof; is_assigned=true; is_used=symbol.is_used; pos=symbol.pos}
             | _ -> raise IncorrectCSTElementsInSymbolTableError
         method use id = match id with
@@ -143,6 +148,7 @@ class symboltable =
                     else
                         ()
                     ;
+                    log_trace ("Using identifier " ^ (Char.escaped x));
                     (self#get_symbol_table !temp_scope_pointer)#set x {typeof=symbol.typeof; is_assigned=symbol.is_assigned; is_used=true; pos=symbol.pos}
             | _ -> raise IncorrectCSTElementsInSymbolTableError
         method get_type_of id = match id with
