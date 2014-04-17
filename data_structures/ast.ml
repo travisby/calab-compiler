@@ -21,14 +21,17 @@ type ast =
     | False of Utils.pos
 ;;
 
-let rec string_of_ast ?(indent="") ast = match ast with
+let rec string_of_ast ?(indent="") ast =
+    let tab = "    " in
+    match ast with
     | Program (x, _) ->
             "\n"
             ^ indent
             ^ "Program"
-            ^ (string_of_ast ~indent:(indent ^ "    ") x)
+            ^ (string_of_ast ~indent:(indent ^ tab) x)
+            ^ "\n"
     | Block (xs, _) ->
-            let strings_of_xs = List.map (string_of_ast ~indent:(indent ^ " ")) xs in
+            let strings_of_xs = List.map (string_of_ast ~indent:(indent ^ tab)) xs in
             "\n"
             ^ indent
             ^ "Block"
@@ -36,40 +39,89 @@ let rec string_of_ast ?(indent="") ast = match ast with
     | Print_Statement (x, _) ->
             "\n"
             ^ indent
-            ^ "Print"
-            ^ (string_of_ast ~indent:(indent ^ "    ") x)
-    | Assignment_Statement (x, y, _) -> (string_of_ast x) ^ " = " ^ (string_of_ast y)
-    | Var_Decl (x, y, _) -> (string_of_ast x) ^ " " ^ (string_of_ast y)
+            ^ "print"
+            ^ (string_of_ast ~indent:(indent ^ tab) x)
+    | Assignment_Statement (x, y, _) ->
+            "\n"
+            ^ indent
+            ^ "="
+            ^ (string_of_ast ~indent:(indent ^ tab) x)
+            ^ (string_of_ast ~indent:(indent ^ tab) y)
+    | Var_Decl (x, y, _) ->
+            "\n"
+            ^ indent
+            ^ "Declared!"
+            ^ (string_of_ast ~indent:(indent ^ tab) x)
+            ^ (string_of_ast ~indent:(indent ^ tab) y)
     | While_Statement (x, y, _) ->
             "\n"
             ^ indent
             ^ "While"
-            ^ (string_of_ast ~indent:(indent ^ "    ") x)
+            ^ (string_of_ast ~indent:(indent ^ tab) x)
             ^ "\n"
             ^ indent
             ^ "Do"
-            ^ (string_of_ast ~indent:(indent ^ "    ") y)
+            ^ (string_of_ast ~indent:(indent ^ tab) y)
     | If_Statement (x, y, _) ->
             "\n"
             ^ indent
             ^ "If"
-            ^ (string_of_ast ~indent:(indent ^ "    ") x)
+            ^ (string_of_ast ~indent:(indent ^ tab) x)
             ^ "\n"
             ^ indent
             ^ "Then"
-            ^ (string_of_ast ~indent:(indent ^ "    ") y)
-    | Int _ -> "Int"
-    | Boolean _ -> "Boolean"
-    | String _ -> "String"
-    | Id (x, _) -> Char.escaped x
+            ^ (string_of_ast ~indent:(indent ^ tab) y)
+    | Int _ ->
+            "\n"
+            ^ indent
+            ^ "int"
+    | Boolean _ ->
+            "\n"
+            ^ indent
+            ^ "boolean"
+    | String _ ->
+            "\n"
+            ^ indent
+            ^ "string"
+    | Id (x, _) ->
+            "\n"
+            ^ indent
+            ^ Char.escaped x
     | Char_List (_, _) -> (*TODO *) raise Not_found
-    | Addition (x, y, _) -> (string_of_ast x) ^ " + " ^ (string_of_ast y)
-    | Equallity_Test (x, y, _) -> (string_of_ast x) ^ " == " ^ (string_of_ast y)
-    | Inequallity_Test (x, y, _) -> (string_of_ast x) ^ " != " ^ (string_of_ast y)
-    | Char (x, _) -> Char.escaped x
-    | Digit (d, _) -> string_of_int d
-    | True _ -> "true"
-    | False _ -> "false"
+    | Addition (x, y, _) ->
+            "\n"
+            ^ indent
+            ^ "+"
+            ^ (string_of_ast ~indent:(indent ^ tab) x)
+            ^ (string_of_ast ~indent:(indent ^ tab) y)
+    | Equallity_Test (x, y, _) ->
+            "\n"
+            ^ indent
+            ^ "=="
+            ^ (string_of_ast ~indent:(indent ^ tab) x) 
+            ^ (string_of_ast ~indent:(indent ^ tab) y)
+    | Inequallity_Test (x, y, _) ->
+            "\n"
+            ^ indent
+            ^ "!="
+            ^ (string_of_ast ~indent:(indent ^ tab) x) 
+            ^ (string_of_ast ~indent:(indent ^ tab) y)
+    | Char (x, _) ->
+            "\n"
+            ^ indent
+            ^ Char.escaped x
+    | Digit (d, _) ->
+            "\n"
+            ^ indent
+            ^ string_of_int d
+    | True _ ->
+            "\n"
+            ^ indent
+            ^ "true"
+    | False _ ->
+            "\n"
+            ^ indent
+            ^ "false"
     | _ -> raise Not_found
 ;;
 
