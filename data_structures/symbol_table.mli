@@ -1,7 +1,9 @@
-exception Already_Exists_In_table
+type st_entree = { typeof: Cst.cst; is_assigned : bool; is_used : bool; pos:Utils.pos}
+
+exception Already_Exists_In_table of st_entree * st_entree
 exception CannotExitGlobalScope
 exception IncorrectCSTElementsInSymbolTableError
-exception Does_Not_Exist_In_Table
+exception Does_Not_Exist_In_Table of st_entree
 
 class symboltable :
   object

@@ -1,7 +1,9 @@
-exception Already_Exists_In_table;;
+type st_entree = { typeof: Cst.cst; is_assigned : bool; is_used : bool; pos:Utils.pos}
+
+exception Already_Exists_In_table of st_entree * st_entree;;
 exception CannotExitGlobalScope;;
 exception IncorrectCSTElementsInSymbolTableError;;
-exception Does_Not_Exist_In_Table;;
+exception Does_Not_Exist_In_Table of st_entree;;
 
 let log_error = Log.log_error_func "symbol_table"
 let log_warn = Log.log_warn_func "symbol_table"
@@ -17,7 +19,7 @@ class ['a, 'b] table =
             then
                 begin
                     log_error ("Symbol is already declared");
-                    raise Already_Exists_In_table
+                    raise (Already_Exists_In_table ((self#get x), y))
                 end
             else
                 Hashtbl.add t x y
@@ -27,7 +29,7 @@ class ['a, 'b] table =
             then
                 begin
                     log_error ("Symbol not declared");
-                    raise Does_Not_Exist_In_Table
+                    raise (Does_Not_Exist_In_Table y)
                 end
             else
                 Hashtbl.replace t x y
@@ -39,8 +41,7 @@ class ['a, 'b] table =
  * We use an array because it is a mutable data structure.
  * We will be appending to the array to "add" new scopes
  *)
-type st_entree = { typeof: Cst.cst; is_assigned : bool; is_used : bool}
-and scope =
+type scope =
     | Global of (char, st_entree) table * scope array
     (* The last parameter is the parent scope *)
     | Scope of (char, st_entree) table * scope array * scope ref
@@ -82,13 +83,13 @@ class symboltable =
             ()
 
         method add id _type = match id with
-            | Cst.Id x -> !(self#get_current_table)#add x {typeof=_type; is_assigned=false; is_used=false}
+            | Cst.Id (x, pos) -> !(self#get_current_table)#add x {typeof=_type; is_assigned=false; is_used=false; pos=pos}
             | _ -> raise IncorrectCSTElementsInSymbolTableError
         method private get_symbol_table scope = match scope with
             | Scope (t, _, _) -> t
             | Global (t, _) -> t
         method private get_containing_st_pointer id = match id with
-            | Cst.Id x ->
+            | Cst.Id (x, pos) ->
                     let get_parent scope = match scope with
                         | Scope (_, _, x) -> x
                         | Global (_, _) -> raise CannotExitGlobalScope
@@ -104,37 +105,33 @@ class symboltable =
                         (* ocaml will only take a dereference... *)
                         temp_scope_pointer := !(get_parent !temp_scope_pointer)
                     done;
-                    let id_char = match id with
-                        | Cst.Id x -> x
-                        | _ -> raise Not_found
-                    in
                     if
-                        not ((self#get_symbol_table !temp_scope_pointer)#mem id_char)
+                        not ((self#get_symbol_table !temp_scope_pointer)#mem x)
                     then
                         begin
                             log_error ("Symbol not declared");
-                            raise Does_Not_Exist_In_Table
+                            raise (Does_Not_Exist_In_Table {pos=pos; typeof=Cst.Null; is_used=true; is_assigned=false})
                         end
                     else ();
                     temp_scope_pointer
             | _ -> raise IncorrectCSTElementsInSymbolTableError
         method private get_id id = match id with
-            | Cst.Id x ->
+            | Cst.Id (x, _) ->
                     let temp_scope_pointer = self#get_containing_st_pointer id in
                     ref ((self#get_symbol_table !temp_scope_pointer)#get x)
             | _ -> raise IncorrectCSTElementsInSymbolTableError
         method assign id = match id with
-            | Cst.Id x ->
+            | Cst.Id (x, _) ->
                     (*
                      * Even if we didn't find the correct location, that's OK.
                      * The table will throw the error we want
                      *)
                     let temp_scope_pointer = self#get_containing_st_pointer id in
                     let symbol = !(self#get_id id) in
-                    (self#get_symbol_table !temp_scope_pointer)#set x {typeof=symbol.typeof; is_assigned=true; is_used=symbol.is_used}
+                    (self#get_symbol_table !temp_scope_pointer)#set x {typeof=symbol.typeof; is_assigned=true; is_used=symbol.is_used; pos=symbol.pos}
             | _ -> raise IncorrectCSTElementsInSymbolTableError
         method use id = match id with
-            | Cst.Id x ->
+            | Cst.Id (x, _) ->
                     let temp_scope_pointer = self#get_containing_st_pointer id in
                     let symbol = !(self#get_id id) in
                     if
@@ -144,10 +141,10 @@ class symboltable =
                     else
                         ()
                     ;
-                    (self#get_symbol_table !temp_scope_pointer)#set x {typeof=symbol.typeof; is_assigned=symbol.is_assigned; is_used=true}
+                    (self#get_symbol_table !temp_scope_pointer)#set x {typeof=symbol.typeof; is_assigned=symbol.is_assigned; is_used=true; pos=symbol.pos}
             | _ -> raise IncorrectCSTElementsInSymbolTableError
         method get_type_of id = match id with
-            | Cst.Id x ->
+            | Cst.Id (x, _) ->
                     let symbol = !(self#get_id id) in
                     symbol.typeof
             | _ -> raise IncorrectCSTElementsInSymbolTableError

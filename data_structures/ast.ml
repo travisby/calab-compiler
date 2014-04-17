@@ -1,45 +1,46 @@
 type ast =
-    | Program of ast
-    | Block of ast list
-    | Print_Statement of ast
-    | Assignment_Statement of ast * ast
-    | Var_Decl of ast * ast
-    | While_Statement of ast * ast
-    | If_Statement of ast * ast
-    | Int
-    | Boolean
-    | String
-    | Id of char
-    | Plus of ast * ast
-    | Char_List of ast list
-    | Addition of ast * ast
-    | Equallity_Test of ast * ast
-    | Inequallity_Test of ast * ast
-    | Char of char
-    | Digit of int
-    | True | False
+    | Program of ast * Utils.pos
+    | Block of ast list * Utils.pos
+    | Print_Statement of ast * Utils.pos
+    | Assignment_Statement of ast * ast * Utils.pos
+    | Var_Decl of ast * ast * Utils.pos
+    | While_Statement of ast * ast * Utils.pos
+    | If_Statement of ast * ast * Utils.pos
+    | Int of Utils.pos
+    | Boolean of Utils.pos
+    | String of Utils.pos
+    | Id of char * Utils.pos
+    | Plus of ast * ast * Utils.pos
+    | Char_List of ast list * Utils.pos
+    | Addition of ast * ast * Utils.pos
+    | Equallity_Test of ast * ast * Utils.pos
+    | Inequallity_Test of ast * ast * Utils.pos
+    | Char of char * Utils.pos
+    | Digit of int * Utils.pos
+    | True of Utils.pos
+    | False of Utils.pos
 ;;
 
 let rec string_of_ast ?(indent="") ast = match ast with
-    | Program x ->
+    | Program (x, _) ->
             "\n"
             ^ indent
             ^ "Program"
             ^ (string_of_ast ~indent:(indent ^ "    ") x)
-    | Block xs ->
+    | Block (xs, _) ->
             let strings_of_xs = List.map (string_of_ast ~indent:(indent ^ " ")) xs in
             "\n"
             ^ indent
             ^ "Block"
             ^ (String.concat "" strings_of_xs)
-    | Print_Statement x ->
+    | Print_Statement (x, _) ->
             "\n"
             ^ indent
             ^ "Print"
             ^ (string_of_ast ~indent:(indent ^ "    ") x)
-    | Assignment_Statement (x, y) -> (string_of_ast x) ^ " = " ^ (string_of_ast y)
-    | Var_Decl (x, y) -> (string_of_ast x) ^ " " ^ (string_of_ast y)
-    | While_Statement (x, y) ->
+    | Assignment_Statement (x, y, _) -> (string_of_ast x) ^ " = " ^ (string_of_ast y)
+    | Var_Decl (x, y, _) -> (string_of_ast x) ^ " " ^ (string_of_ast y)
+    | While_Statement (x, y, _) ->
             "\n"
             ^ indent
             ^ "While"
@@ -48,7 +49,7 @@ let rec string_of_ast ?(indent="") ast = match ast with
             ^ indent
             ^ "Do"
             ^ (string_of_ast ~indent:(indent ^ "    ") y)
-    | If_Statement (x, y) ->
+    | If_Statement (x, y, _) ->
             "\n"
             ^ indent
             ^ "If"
@@ -57,18 +58,18 @@ let rec string_of_ast ?(indent="") ast = match ast with
             ^ indent
             ^ "Then"
             ^ (string_of_ast ~indent:(indent ^ "    ") y)
-    | Int -> "Int"
-    | Boolean -> "Boolean"
-    | String -> "String"
-    | Id x -> Char.escaped x
-    | Char_List _ -> (*TODO *) raise Not_found
-    | Addition (x, y) -> (string_of_ast x) ^ " + " ^ (string_of_ast y)
-    | Equallity_Test (x, y) -> (string_of_ast x) ^ " == " ^ (string_of_ast y)
-    | Inequallity_Test (x, y) -> (string_of_ast x) ^ " != " ^ (string_of_ast y)
-    | Char x -> Char.escaped x
-    | Digit d -> string_of_int d
-    | True -> "true"
-    | False -> "false"
+    | Int _ -> "Int"
+    | Boolean _ -> "Boolean"
+    | String _ -> "String"
+    | Id (x, _) -> Char.escaped x
+    | Char_List (_, _) -> (*TODO *) raise Not_found
+    | Addition (x, y, _) -> (string_of_ast x) ^ " + " ^ (string_of_ast y)
+    | Equallity_Test (x, y, _) -> (string_of_ast x) ^ " == " ^ (string_of_ast y)
+    | Inequallity_Test (x, y, _) -> (string_of_ast x) ^ " != " ^ (string_of_ast y)
+    | Char (x, _) -> Char.escaped x
+    | Digit (d, _) -> string_of_int d
+    | True _ -> "true"
+    | False _ -> "false"
     | _ -> raise Not_found
 ;;
 

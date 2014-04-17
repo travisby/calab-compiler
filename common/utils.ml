@@ -1,3 +1,5 @@
+type pos = {lineno:int; charno:int}
+
 let rec join join_char lst = match lst with
     | []  -> ""
     | x::[]  -> x
