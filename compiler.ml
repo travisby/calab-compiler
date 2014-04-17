@@ -3,6 +3,7 @@ open Utils;;
 open Semantics;;
 
 let log_info = Log.log_info_func "compiler";;
+let log_error = Log.log_error_func "compiler";;
 
 let file_name = Array.get Sys.argv 1 in
 let file_string = Utils.file_name_to_string file_name in
@@ -64,6 +65,11 @@ with x -> match x with
             print_endline karet_at;
             print_endline "--------------------------";
             raise x
+    | Not_found ->
+            log_error "COMPILER ERROR";
+            print_endline "This was a compiler error that should not have happened.";
+            print_endline "Please contact travisby@gmail.com, or post to http://github.com/travisby/calab-compiler with...";
+            print_endline "The program you're attempting to run, the version number of calab-compiler you're using, and all of the log data from LOG_TRACE on"
     | x ->
         print_newline ();
         print_string "Cannot recover.  Exitting";
