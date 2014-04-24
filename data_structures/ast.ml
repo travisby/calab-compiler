@@ -86,7 +86,6 @@ let rec string_of_ast ?(indent="") ast =
             "\n"
             ^ indent
             ^ Char.escaped x
-    | Char_List (_, _) -> (*TODO *) raise Not_found
     | Addition (x, y, _) ->
             "\n"
             ^ indent
@@ -121,6 +120,12 @@ let rec string_of_ast ?(indent="") ast =
             "\n"
             ^ indent
             ^ "false"
-    | _ -> raise Not_found
-;;
+    | Char_List (xs, _) ->
+            "\n"
+            ^ indent
+            ^ "\""
+            ^ (String.concat "" (List.map (string_of_ast ~indent:(indent ^ tab)) xs))
+            ^ "\n"
+            ^ indent
+            ^ "\""
 
