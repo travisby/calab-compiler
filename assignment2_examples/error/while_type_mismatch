@@ -1,0 +1,6 @@
+{
+    while "not a bool" {
+        print ("oh my")
+    }
+    print ("done")
+}$

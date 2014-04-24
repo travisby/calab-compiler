@@ -1,0 +1,12 @@
+{
+    int a
+    a = 6
+    {
+        string a
+        a = "a string"
+        string b
+        b = a
+        print(b)
+    }
+    print(a)
+}$

@@ -1,0 +1,13 @@
+{
+    int a
+    string b
+    b = "bee"
+    {
+        int b
+        b = 1
+        a = b
+        print(b)
+        print(a)
+    }
+    print(b)
+}$
