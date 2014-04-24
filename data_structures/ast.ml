@@ -10,7 +10,6 @@ type ast =
     | Boolean of Utils.pos
     | String of Utils.pos
     | Id of char * Utils.pos
-    | Plus of ast * ast * Utils.pos
     | Char_List of ast list * Utils.pos
     | Addition of ast * ast * Utils.pos
     | Equallity_Test of ast * ast * Utils.pos
