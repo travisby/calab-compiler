@@ -3,10 +3,33 @@ type operator = {pos:Utils.pos; str:string}
 exception Type_Error of obj * operator * obj
 
 open Ast;;
+open Utils;;
 
 let log_trace = Log.log_trace_func "semantic_analyzer";;
 let log_warn = Log.log_warn_func "semantic_analyzer";;
 let log_error = Log.log_error_func "semantic_analyzer";;
+let typeof x st =
+    (* this is zerod so we can compare type == type *)
+    let pos = {charno=(-1); lineno=(-1)} in
+    match x with
+    | Id (x, _) ->
+            begin
+                match st#get_type_of (Cst.Id (x, pos)) with
+                    | Cst.Int _ -> Int pos
+                    | Cst.Boolean _ -> Boolean pos
+                    | Cst.String _ -> String pos
+                    | _ -> raise Not_found
+            end
+    | Addition _
+        | Digit _
+    -> Int pos
+    | Equallity_Test _
+        | Inequallity_Test _
+        | True _
+        | False _
+    -> Boolean pos
+    | Char_List (xs, _) -> String pos
+    | _ -> raise Not_found
 let analyze cst =
     (* This function adds to the ST AND type checks at the same time... this way
      * we use the correct scope for everything *)
@@ -126,141 +149,40 @@ let analyze cst =
             | Cst.Boolean_Expr (_, expr1, boolop, expr2, _, pos) ->
                     begin
                         match boolop with
-                        | Cst.Equal _ ->
-                            begin
-                                let expr1 = inner_func expr1 in
-                                let expr2 = inner_func expr2 in
-                                match expr1, expr2 with
-                                    | Addition (_, _, _), Addition (_, _, _)
-                                        | Addition (_, _, _), Digit (_, _)
-                                        | Digit (_, _), Addition (_, _, _)
-                                        | Digit (_, _), Digit (_, _)
-                                    -> Equallity_Test (expr1, expr2, pos)
-                                    | Char_List (_, _), Char_List (_, _) -> Equallity_Test (expr1, expr2, pos)
-                                    | Equallity_Test (_, _, _), Equallity_Test (_, _, _)
-                                        | Equallity_Test (_, _, _), Inequallity_Test (_, _, _)
-                                        | Equallity_Test (_, _, _), True _
-                                        | Equallity_Test (_, _, _), False _
-                                        | Inequallity_Test (_, _, _), Equallity_Test (_, _, _)
-                                        | Inequallity_Test (_, _, _), Inequallity_Test (_, _, _)
-                                        | True _, Equallity_Test (_, _, _)
-                                        | False _, Inequallity_Test (_, _, _)
-                                        | True _, True _
-                                        | True _, False _
-                                        | False _, True _
-                                        | False _, False _
-                                    -> Equallity_Test (expr1, expr2, pos)
-                                    | Id (x, pos), Addition _  when (
-                                        match st#get_type_of (Cst.Id (x, pos)) with
-                                            | Cst.Int _ ->  true
-                                            | _ -> false
-                                        )
-                                    -> Equallity_Test (expr1, expr2, pos)
-                                    | Id (x, pos), Digit _  when (
-                                        match st#get_type_of (Cst.Id (x, pos)) with
-                                            | Cst.Int _ -> true
-                                            | _ -> false
-                                        )
-                                    -> Equallity_Test (expr1, expr2, pos)
-                                    | Id (x, pos), Char_List _  when (
-                                        match st#get_type_of (Cst.Id (x, pos)) with
-                                            | Cst.String _ -> true
-                                            | _ -> false
-                                        )
-                                    -> Equallity_Test (expr1, expr2, pos)
-                                    | Id (x, pos), True _ when (
-                                        match st#get_type_of (Cst.Id (x, pos)) with
-                                            | Cst.Boolean _ -> true
-                                            | _ -> false
-                                        )
-                                    -> Equallity_Test (expr1, expr2, pos)
-                                    | Id (x, pos), False _ when (
-                                        match st#get_type_of (Cst.Id (x, pos)) with
-                                            | Cst.Boolean _ -> true
-                                            | _ -> false
-                                        )
-                                    -> Equallity_Test (expr1, expr2, pos)
-                                    | Id (x, pos), Equallity_Test _ when (
-                                        match st#get_type_of (Cst.Id (x, pos)) with
-                                            | Cst.Boolean _ -> true
-                                            | _ -> false
-                                        ) 
-                                    -> Equallity_Test (expr1, expr2, pos)
-                                    | Id (x, pos), Inequallity_Test _ when (
-                                        match st#get_type_of (Cst.Id (x, pos)) with
-                                            | Cst.Boolean _ -> true
-                                            | _ -> false
-                                        )
-                                    -> Equallity_Test (expr1, expr2, pos)
-                                    | x, y ->
-                                            log_error ("Type Error.  Cannot compare  " ^ string_of_ast x ^ " and " ^ string_of_ast y);
-                                            raise (Type_Error ({pos=pos}, {pos=pos; str="=="}, {pos=pos}))
+                            | Cst.Equal _ ->
+                                begin
+                                    let expr1 = inner_func expr1 in
+                                    let expr2 = inner_func expr2 in
+                                    if
+                                        (typeof expr1 st) = (typeof expr2 st)
+                                    then
+                                        Equallity_Test (expr1, expr2, pos)
+                                    else 
+                                        begin
+                                                log_error ("Type Error.  Cannot compare  " ^ string_of_ast expr1 ^ " and " ^ string_of_ast expr2);
+                                                log_error ("Type of expr1: " ^ (string_of_ast (typeof expr1 st)));
+                                                log_error ("Type of expr2: " ^ (string_of_ast (typeof expr2 st)));
+                                                raise (Type_Error ({pos=pos}, {pos=pos; str="=="}, {pos=pos}))
+                                        end
+                                    end
+                            | Cst.Not_Equal _ ->
+                                begin
+                                    let expr1 = inner_func expr1 in
+                                    let expr2 = inner_func expr2 in
+                                    if
+                                        (typeof expr1 st) = (typeof expr2 st)
+                                    then
+                                        Inequallity_Test (expr1, expr2, pos)
+                                    else 
+                                        begin
+                                                log_error ("Type Error.  Cannot compare  " ^ string_of_ast expr1 ^ " and " ^ string_of_ast expr2);
+                                                log_error ("Type of expr1: " ^ (string_of_ast (typeof expr1 st)));
+                                                log_error ("Type of expr2: " ^ (string_of_ast (typeof expr2 st)));
+                                                raise (Type_Error ({pos=pos}, {pos=pos; str="!="}, {pos=pos}))
+                                        end
                                 end
-                        | Cst.Not_Equal _ ->
-                            begin
-                                let expr1 = inner_func expr1 in
-                                let expr2 = inner_func expr2 in
-                                match expr1, expr2 with
-                                    | Addition (_, _, pos), Addition (_, _, pos2)
-                                        | Addition (_, _, pos), Digit (_, pos2)
-                                        | Digit (_, pos), Addition (_, _, pos2)
-                                        | Digit (_, pos), Digit (_, pos2)
-                                    -> Inequallity_Test (expr1, expr2, pos)
-                                    | Char_List (_, _), Char_List (_, _) -> Inequallity_Test (expr1, expr2, pos)
-                                    | Equallity_Test (_, _, pos), Equallity_Test (_, _, pos2)
-                                        | Equallity_Test (_, _, pos), Inequallity_Test (_, _, pos2)
-                                        | Equallity_Test (_, _, pos), True pos2
-                                        | Equallity_Test (_, _, pos), False pos2
-                                        | Inequallity_Test (_, _, pos), Equallity_Test (_, _, pos2)
-                                        | Inequallity_Test (_, _, pos), Inequallity_Test (_, _, pos2)
-                                        | True pos, Equallity_Test (_, _, pos2)
-                                        | False pos, Inequallity_Test (_, _, pos2)
-                                        | True pos, True pos2
-                                        | True pos, False pos2
-                                        | False pos, True pos2
-                                        | False pos, False pos2
-                                    -> Inequallity_Test (expr1, expr2, pos)
-                                    | Id (x, lineno), Addition (_, _, pos2)  when (
-                                        match st#get_type_of (Cst.Id (x, lineno)) with
-                                            | Cst.Int _  -> true
-                                            | _ -> false
-                                        ) -> Inequallity_Test (expr1, expr2, pos)
-                                    | Id (x, lineno), Digit (_, pos2)  when (
-                                        match st#get_type_of (Cst.Id (x, lineno)) with
-                                            | Cst.Int _ -> true
-                                            | _ -> false
-                                        ) -> Inequallity_Test (expr1, expr2, pos)
-                                    | Id (x, lineno), Char_List (_, pos2)  when (
-                                        match st#get_type_of (Cst.Id (x, lineno)) with
-                                            | Cst.String _ -> true
-                                            | _ -> false
-                                        ) -> Inequallity_Test (expr1, expr2, pos)
-                                    | Id (x, lineno), True pos2 when (
-                                        match st#get_type_of (Cst.Id (x, lineno)) with
-                                            | Cst.Boolean _ -> true
-                                            | _ -> false
-                                        ) -> Inequallity_Test (expr1, expr2, pos)
-                                    | Id (x, lineno), False pos2 when (
-                                        match st#get_type_of (Cst.Id (x, lineno)) with
-                                            | Cst.Boolean _ -> true
-                                            | _ -> false
-                                        ) -> Inequallity_Test (expr1, expr2, pos)
-                                    | Id (x, lineno), Equallity_Test (_, _, pos2) when (
-                                        match st#get_type_of (Cst.Id (x, lineno)) with
-                                            | Cst.Boolean _ -> true
-                                            | _ -> false
-                                        ) -> Inequallity_Test (expr1, expr2, pos)
-                                    | Id (x, lineno), Inequallity_Test (_, _, pos2) when (
-                                        match st#get_type_of (Cst.Id (x, lineno)) with
-                                            | Cst.Boolean _ -> true
-                                            | _ -> false
-                                        ) -> Inequallity_Test (expr1, expr2, pos)
-                                    | x, y ->
-                                            log_error ("Type Error.  Cannot compare  " ^ string_of_ast x ^ " and " ^ string_of_ast y);
-                                            raise (Type_Error ({pos=pos}, {pos=pos; str="!="}, {pos=pos}))
-                            end
                             | _ -> raise Not_found
-                        end
+                    end
             | Cst.Id (x, pos) -> Id (x, pos)
             | Cst.Int pos -> Int pos
             | Cst.String pos -> String pos
