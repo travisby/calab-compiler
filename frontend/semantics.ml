@@ -80,8 +80,7 @@ let analyze cst =
             | Cst.Assignment_Statement (id, _, value, pos) ->
                     begin
                         st#assign id;
-                        let typeof = st#get_type_of id in
-                        let ast_id =
+                        let id =
                             begin
                                 match id with
                                     | Cst.Id (x, pos) -> Ast.Id (x, pos)
@@ -89,21 +88,17 @@ let analyze cst =
                             end
                         in
                         let value = inner_func value in
-                        let assignment_statement = Assignment_Statement (inner_func id, value, pos) in
-                        begin
-                            match value, typeof with
-                                | Addition _, Cst.Int _ -> assignment_statement
-                                | Digit _, Cst.Int _ -> assignment_statement
-                                | Char_List _, Cst.String _ -> assignment_statement
-                                | Equallity_Test _, Cst.Boolean _ -> assignment_statement
-                                | Inequallity_Test _, Cst.Boolean _ -> assignment_statement
-                                | True _, Cst.Boolean _ -> assignment_statement
-                                | False _ , Cst.Boolean _ -> assignment_statement
-                                | Id (x, pos), _ when typeof = (st#get_type_of (Cst.Id (x, pos))) -> assignment_statement
-                                | x, _ ->
-                                    log_error ("Type Error.  Cannot assign  " ^ string_of_ast ast_id ^ " to " ^ string_of_ast x);
+                        if
+                            (typeof id st) = (typeof value st)
+                        then
+                            Assignment_Statement (id, value, pos)
+                        else 
+                            begin
+                                    log_error ("Type Error.  Cannot assign  " ^ string_of_ast id ^ " to " ^ string_of_ast value);
+                                    log_error ("Type of id: " ^ (string_of_ast (typeof id st)));
+                                    log_error ("Type of value: " ^ (string_of_ast (typeof value st)));
                                     raise (Type_Error ({pos=pos}, {pos=pos; str="="}, {pos=pos}))
-                        end
+                            end
                     end
             | Cst.Var_Decl (typeof, id, pos) ->
                     st#add id typeof;
