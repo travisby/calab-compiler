@@ -20,30 +20,31 @@ let max_address = 0xFF
 let assembly_list_of_ast _ = Array.to_list (Array.make (max_address + 1) BRK)
 let string_of_hex x = match x with
     | Hex x -> string_of_int x
-let memory_address_as_string x = string_of_hex x
-let constant_as_string x = string_of_hex x
-let value_as_string x = match x with
-    Memory_address x -> memory_address_as_string x
-    | Constant x -> constant_as_string x
+let string_of_memory_address x = string_of_hex x
+let string_of_constant x = string_of_hex x
+let string_of_value x = match x with
+    Memory_address x -> string_of_memory_address x
+    | Constant x -> string_of_constant x
 let rec string_of_hex_list hex_list = match hex_list with
     | [] -> ""
     (* this is the two-character version *)
     | Hex x :: xs when x >= 0xF -> "0x" ^ string_of_int x ^ " " ^ string_of_hex_list xs
     (* and this is the one character *)
     | Hex x :: xs -> "0x0" ^ string_of_int x ^ " " ^ string_of_hex_list xs
-let rec string_of_assembly_list assembly_list = match assembly_list with
-    | [] -> ""
-    | LDA x :: xs -> "LDA " ^ value_as_string x ^ string_of_assembly_list xs
-    | STA x :: xs -> "STA " ^ memory_address_as_string x ^ string_of_assembly_list xs
-    | ADC x :: xs -> "ADC " ^ memory_address_as_string x ^ string_of_assembly_list xs
-    | LDX x :: xs -> "LDX " ^ value_as_string x ^ string_of_assembly_list xs
-    | LDY x :: xs -> "LDY " ^ value_as_string x ^ string_of_assembly_list xs
-    | NOP :: xs -> "NOP " ^ string_of_assembly_list xs
-    | BRK :: xs -> "BRK " ^ string_of_assembly_list xs
-    | CPX x :: xs -> "CPX " ^ memory_address_as_string x ^ string_of_assembly_list xs
-    | BNE x :: xs -> "BNE " ^ memory_address_as_string x ^ string_of_assembly_list xs
-    | INC x :: xs -> "INC " ^ memory_address_as_string x ^ string_of_assembly_list xs
-    | SYS :: xs -> "SYS " ^ string_of_assembly_list xs
+let rec string_of_assembly_list assembly_list =
+    let string_of_instruction instruction = match instruction with
+        | LDA x -> "LDA " ^ string_of_value x
+        | STA x -> "STA " ^ string_of_memory_address x
+        | ADC x -> "ADC " ^ string_of_memory_address x
+        | LDX x -> "LDX " ^ string_of_value x
+        | LDY x -> "LDY " ^ string_of_value x
+        | NOP -> "NOP"
+        | BRK -> "BRK"
+        | CPX x -> "CPX " ^ string_of_memory_address x
+        | BNE x -> "BNE " ^ string_of_memory_address x
+        | INC x -> "INC " ^ string_of_memory_address x
+        | SYS -> "SYS"
+    in String.concat " " (List.map string_of_instruction assembly_list)
 let rec assemble assembly_list =
     let assemble_one instruction = match instruction with
         | LDA (Constant x) -> [Hex 0xA9; x]
