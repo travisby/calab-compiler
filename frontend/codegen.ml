@@ -27,7 +27,10 @@ let value_as_string x = match x with
     | Constant x -> constant_as_string x
 let rec string_of_hex_list hex_list = match hex_list with
     | [] -> ""
-    | Hex x :: xs -> string_of_int x ^ " " ^ string_of_hex_list xs
+    (* this is the two-character version *)
+    | Hex x :: xs when x >= 0xF -> "0x" ^ string_of_int x ^ " " ^ string_of_hex_list xs
+    (* and this is the one character *)
+    | Hex x :: xs -> "0x0" ^ string_of_int x ^ " " ^ string_of_hex_list xs
 let rec string_of_assembly_list assembly_list = match assembly_list with
     | [] -> ""
     | LDA x :: xs -> "LDA " ^ value_as_string x ^ string_of_assembly_list xs
