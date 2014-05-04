@@ -5,6 +5,7 @@ ocamlc -c -I common -I data_structures data_structures/ast.mli
 ocamlc -c -I common -I data_structures -I frontend frontend/lex.mli
 ocamlc -c -I common -I data_structures -I frontend frontend/parse.mli
 ocamlc -c -I common -I data_structures -I frontend frontend/semantics.mli
+ocamlc -c -I common -I data_structures -I frontend frontend/codegen.mli
 ocamlc \
     -I common -I data_structures -I frontend \
     dynlink.cma \
@@ -18,5 +19,6 @@ ocamlc \
     frontend/lex.ml \
     frontend/parse.ml \
     frontend/semantics.ml \
+    frontend/codegen.ml \
     compiler.ml \
 -o compiler -g

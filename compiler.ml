@@ -17,7 +17,13 @@ try
     let ast = Semantics.analyze cst in
     let ast_string = Ast.string_of_ast ast in
     log_info "Printing the AST";
-    log_info ast_string
+    log_info ast_string;
+    let instructions = Codegen.assembly_list_of_ast ast in
+    log_info "Printing instructions";
+    log_info (Codegen.string_of_assembly_list instructions);
+    let assembled = Codegen.assemble instructions in
+    log_info "Printing assembled instructions";
+    log_info (Codegen.string_of_hex_list assembled)
 with x -> match x with
     |  Lex.UnrecognizedTokenError (token, lineno, charno) ->
             let file_by_lines = Str.split (Str.regexp "\n") file_string in
