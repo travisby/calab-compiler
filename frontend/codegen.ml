@@ -46,7 +46,19 @@ let rec string_of_assembly_list assembly_list = match assembly_list with
     | SYS :: xs -> "SYS " ^ string_of_assembly_list xs
 let rec assemble assembly_list =
     let assemble_one instruction = match instruction with
-        (* TODO *)
-        | _ -> Hex 0x00
+        | LDA (Constant x) -> [Hex 0xA9; x]
+        | LDA (Memory_address x) -> [Hex 0xAD; x]
+        | STA x -> [Hex 0x8D; x]
+        | ADC x -> [Hex 0x6D; x]
+        | LDX (Constant x) -> [Hex 0xA2; x]
+        | LDX (Memory_address x) -> [Hex 0xAE; x]
+        | LDY (Constant x) -> [Hex 0xA0; x]
+        | LDY (Memory_address x) -> [Hex 0xAC; x]
+        | NOP -> [Hex 0xEA]
+        | BRK -> [Hex 0x00]
+        | CPX x -> [Hex 0xEC; x]
+        | BNE x -> [Hex 0xEF; x]
+        | INC x -> [Hex 0xEE; x]
+        | SYS -> [Hex 0xFF]
     in
-    List.map assemble_one assembly_list
+    List.flatten (List.map assemble_one assembly_list)
