@@ -1,24 +1,6 @@
 open Utils;;
+open Assembly;;
 
-type hex = Hex of int
-type memory_address = hex
-type constant = hex
-type value = 
-    Memory_address of memory_address
-    | Constant of constant
-type assembly =
-    | LDA of value
-    | STA of memory_address
-    | ADC of memory_address
-    | LDX of value
-    | LDY of value
-    | NOP
-    | BRK
-    | CPX of memory_address
-    | BNE of memory_address
-    | INC of memory_address
-    | SYS
-let max_address = 0xFF
 let type_int = Ast.Int {charno=(-1); lineno=(-1)}
 let type_bool = Ast.Boolean {charno=(-1); lineno=(-1)}
 let type_string = Ast.String {charno=(-1); lineno=(-1)}
@@ -30,7 +12,7 @@ let false_string =
     let result = "falsex" in
     String.set result 5 '\000';
     result
-let true_address = max_address - (String.length true_string)
+let true_address = Assembly.max_address - (String.length true_string)
 let false_address = true_address - (String.length false_string)
 let typeof ast st = match ast with
     | Ast.Id (x, pos) ->
@@ -54,20 +36,29 @@ let typeof ast st = match ast with
 let assembly_list_of_ast ast st =
     let memory = Array.make max_address BRK in
     let rec func ast = match ast with
-        | Ast.Program (x, _) -> func x
+        | Ast.Program (x, _) ->
+                (* Program does what block does, except enters a new scope *)
+                begin
+                    match x with
+                        | Ast.Block (xs, _) ->
+                            List.flatten(List.map func xs)
+                end
         | Ast.Block (xs, _) ->
+                print_endline "Visiting child in ST";
                 st#visit;
                 let value = List.flatten(List.map func xs) in
+                print_endline "Leaving child in ST";
                 st#leave;
                 value
         | Ast.Print_Statement (x, _) when typeof x st = type_int ->
             func x @ [
-                LDY(Constant(Hex(1)));
+                LDX(Constant(Hex(1)));
                 SYS;
             ]
         | Ast.Print_Statement (x, _) when typeof x st = type_string ->
             func x @ [
-                LDY(Constant(Hex(2)));
+                LDX(Constant(Hex(2)));
+                Reserved;
                 SYS;
             ]
         | Ast.Print_Statement (x, _) when typeof x st = type_bool ->
@@ -75,28 +66,34 @@ let assembly_list_of_ast ast st =
                 match x with
                     | Ast.True _ ->
                         [
-                            LDX(Memory_address(Hex(true_address)));
-                            LDY(Constant(Hex(2)));
+                            LDY(Memory_address(Hex(true_address)));
+                            Reserved;
+                            LDX(Constant(Hex(2)));
+                            Reserved;
                             SYS;
                         ]
                     | Ast.False _ ->
                         [
-                            LDX(Memory_address(Hex(false_address)));
-                            LDY(Constant(Hex(2)));
+                            LDY(Memory_address(Hex(false_address)));
+                            Reserved;
+                            LDX(Constant(Hex(2)));
+                            Reserved;
                             SYS;
                         ]
                     | Ast.Equallity_Test _
                         | Ast.Inequallity_Test _
                     ->
                         func x @ [
-                            LDY(Constant(Hex(2)));
+                            LDX(Constant(Hex(2)));
+                            Reserved;
                             SYS;
                         ]
             end
         | Ast.Assignment_Statement (x, y, _) ->
             (* TODO this for different types for x *)
             func y @ [
-                STA(st#get_address x)
+                STA(st#get_address x);
+                Reserved;
             ]
         | Ast.Var_Decl (x, y, _) -> []
         | Ast.While_Statement (x, y, _) -> raise Not_found
@@ -106,8 +103,11 @@ let assembly_list_of_ast ast st =
                 (* brute force solution *)
                 (* TODO have an optional parameter saying where to save things *)
                 LDA(Memory_address(st#get_address ast));
+                Reserved;
                 LDY(Memory_address(st#get_address ast));
+                Reserved;
                 LDX(Memory_address(st#get_address ast));
+                Reserved;
         ]
         | Ast.Addition (x, y, _) -> raise Not_found
         | Ast.Equallity_Test (x, y, _) -> raise Not_found
@@ -116,28 +116,41 @@ let assembly_list_of_ast ast st =
         | Ast.Digit (d, _) ->
             [
                 LDA(Constant(Hex(d)));
+                Reserved;
                 LDX(Constant(Hex(d)));
+                Reserved;
                 LDY(Constant(Hex(d)));
+                Reserved;
             ]
         | Ast.True _ ->
             [
                 LDA(Memory_address(Hex(true_address)));
+                Reserved;
                 LDX(Memory_address(Hex(true_address)));
+                Reserved;
                 LDY(Memory_address(Hex(true_address)));
+                Reserved;
             ]
         | Ast.False _ ->
             [
                 LDA(Memory_address(Hex(false_address)));
+                Reserved;
                 LDX(Memory_address(Hex(false_address)));
+                Reserved;
                 LDY(Memory_address(Hex(false_address)));
+                Reserved;
             ]
         | Ast.Char_List (xs, _) ->
             [
                 LDA(Memory_address(st#get_address ast));
+                Reserved;
                 LDY(Memory_address(st#get_address ast));
+                Reserved;
                 LDX(Memory_address(st#get_address ast));
+                Reserved;
             ]
-    in 
+    in
+    List.iteri (fun i x -> Array.set memory i x) (func ast);
     Array.to_list memory
 let string_of_hex x = match x with
     | Hex x -> string_of_int x
@@ -165,6 +178,7 @@ let rec string_of_assembly_list assembly_list =
         | BNE x -> "BNE " ^ string_of_memory_address x
         | INC x -> "INC " ^ string_of_memory_address x
         | SYS -> "SYS"
+        | Reserved -> ""
     in String.concat " " (List.map string_of_instruction assembly_list)
 let rec assemble assembly_list =
     let assemble_one instruction = match instruction with
@@ -182,5 +196,6 @@ let rec assemble assembly_list =
         | BNE x -> [Hex 0xEF; x]
         | INC x -> [Hex 0xEE; x]
         | SYS -> [Hex 0xFF]
+        | Reserved -> []
     in
     List.flatten (List.map assemble_one assembly_list)

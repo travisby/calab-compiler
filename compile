@@ -1,5 +1,6 @@
 ocamlc -c -I common common/utils.mli
 ocamlc -c -I common -I data_structures data_structures/cst.mli
+ocamlc -c -I common -I data_structures data_structures/assembly.mli
 ocamlc -c -I common -I data_structures data_structures/symbol_table.mli
 ocamlc -c -I common -I data_structures data_structures/ast.mli
 ocamlc -c -I common -I data_structures -I frontend frontend/lex.mli
@@ -14,6 +15,7 @@ ocamlc \
     common/log.ml \
     common/utils.ml \
     data_structures/cst.ml \
+    data_structures/assembly.ml \
     data_structures/symbol_table.ml \
     data_structures/ast.ml \
     frontend/lex.ml \
