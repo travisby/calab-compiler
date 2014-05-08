@@ -14,4 +14,6 @@ class symboltable :
     method use : Cst.cst -> unit
     method get_type_of : Cst.cst -> Cst.cst
     method warn_on_unused_in_current_scope : unit
+    method leave : unit
+    method visit : unit
   end

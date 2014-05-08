@@ -16,7 +16,7 @@ type assembly =
     | BNE of memory_address
     | INC of memory_address
     | SYS
-val assembly_list_of_ast : Ast.ast -> assembly list
+val assembly_list_of_ast : Ast.ast -> Symbol_table.symbol_table -> assembly list
 val string_of_assembly_list : assembly list -> string
 val assemble : assembly list -> hex list
 val string_of_hex_list : hex list -> string
