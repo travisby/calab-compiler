@@ -188,4 +188,4 @@ let analyze cst =
             | Cst.True pos -> True pos
             | Cst.False pos -> False pos
             | _ -> raise Not_found
-    in inner_func cst
+    in (inner_func cst, st)

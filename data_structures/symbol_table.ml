@@ -60,9 +60,23 @@ class symboltable =
     object (self)
         val mutable head = ref scope_init
         val mutable current_scope = ref scope_init
+        val mutable nextChild = -1
         method private get_current_table = match !current_scope with
                 | Scope (t, _, _) -> ref t
                 | Global (t, _) -> ref t
+        (* TODO *)
+        method get_address (ast : Ast.ast) = Assembly.Hex(0)
+        method leave =
+            nextChild <- 0;
+            self#exit;
+        method visit =
+            let xs = match !current_scope with
+                | Scope (_, xs, _) -> xs
+                | Global (_, xs) -> xs
+            in
+            current_scope <- ref (Array.get xs nextChild);
+            nextChild <- nextChild + 1
+
         method enter =
             (*
              * We seem (because we actually aren't) to be abusing let..in

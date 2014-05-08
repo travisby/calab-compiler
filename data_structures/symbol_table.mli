@@ -16,4 +16,5 @@ class symboltable :
     method warn_on_unused_in_current_scope : unit
     method leave : unit
     method visit : unit
+    method get_address : Ast.ast -> Assembly.memory_address
   end

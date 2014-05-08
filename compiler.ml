@@ -14,11 +14,11 @@ try
     let cst_string = Cst.string_of_cst cst in
     log_info "Printing the CST";
     log_info cst_string;
-    let ast = Semantics.analyze cst in
+    let (ast, st) = Semantics.analyze cst in
     let ast_string = Ast.string_of_ast ast in
     log_info "Printing the AST";
     log_info ast_string;
-    let instructions = Codegen.assembly_list_of_ast ast in
+    let instructions = Codegen.assembly_list_of_ast ast st in
     log_info "Printing instructions";
     log_info (Codegen.string_of_assembly_list instructions);
     let assembled = Codegen.assemble instructions in
