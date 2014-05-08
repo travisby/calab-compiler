@@ -159,12 +159,15 @@ let string_of_constant x = string_of_hex x
 let string_of_value x = match x with
     Memory_address x -> string_of_memory_address x
     | Constant x -> string_of_constant x
-let rec string_of_hex_list hex_list = match hex_list with
+let rec string_of_hex_list hex_list =
+    (* http://stackoverflow.com/a/10440025/868465 *)
+    let string_of_int = Printf.sprintf "%x" in
+    match hex_list with
     | [] -> ""
     (* this is the two-character version *)
-    | Hex x :: xs when x >= 0xF -> "0x" ^ string_of_int x ^ " " ^ string_of_hex_list xs
+    | Hex x :: xs when x >= 0xF -> "" ^ string_of_int x ^ " " ^ string_of_hex_list xs
     (* and this is the one character *)
-    | Hex x :: xs -> "0x0" ^ string_of_int x ^ " " ^ string_of_hex_list xs
+    | Hex x :: xs -> "0" ^ string_of_int x ^ " " ^ string_of_hex_list xs
 let rec string_of_assembly_list assembly_list =
     let string_of_instruction instruction = match instruction with
         | LDA x -> "LDA " ^ string_of_value x
