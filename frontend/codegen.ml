@@ -4,6 +4,9 @@ open Assembly;;
 let type_int = Ast.Int {charno=(-1); lineno=(-1)}
 let type_bool = Ast.Boolean {charno=(-1); lineno=(-1)}
 let type_string = Ast.String {charno=(-1); lineno=(-1)}
+let a = 0
+let x = 1
+let y = 2
 let true_string =
     let result = "truex" in
     String.set result 4 '\000';
@@ -32,16 +35,18 @@ let typeof ast st = match ast with
         | Ast.False _
     -> type_bool
     | Ast.Char_List (xs, _) -> type_string
+    | _ -> raise Not_found (* These do not have types *)
 
 let assembly_list_of_ast ast st =
     let memory = Array.make max_address BRK in
-    let rec func ast = match ast with
+    let rec func ?register:(register=a) ast = match ast with
         | Ast.Program (x, _) ->
                 (* Program does what block does, except enters a new scope *)
                 begin
                     match x with
                         | Ast.Block (xs, _) ->
-                            List.flatten(List.map func xs)
+                            List.flatten(List.map (fun x -> func x) xs)
+                        | _ -> raise Not_found
                 end
         | Ast.Block (xs, _) ->
                 print_endline "Visiting child in ST";
@@ -88,6 +93,7 @@ let assembly_list_of_ast ast st =
                             Reserved;
                             SYS;
                         ]
+                    | _ -> raise Not_found
             end
         | Ast.Assignment_Statement (x, y, _) ->
             (* TODO this for different types for x *)
@@ -109,37 +115,57 @@ let assembly_list_of_ast ast st =
                 LDX(Memory_address(st#get_address ast));
                 Reserved;
         ]
-        | Ast.Addition (x, y, _) -> raise Not_found
+        | Ast.Addition (digit, expr, _) ->
+                (func ~register: a digit)
+                @ [STA(st#get_temp_address); Reserved]
+                @ (func ~register: a digit)
+                @ [ADC(st#get_temp_address); Reserved]
         | Ast.Equallity_Test (x, y, _) -> raise Not_found
         | Ast.Inequallity_Test (x, y, _) -> raise Not_found
         | Ast.Char (x, _) -> raise Not_found
         | Ast.Digit (d, _) ->
             [
-                LDA(Constant(Hex(d)));
-                Reserved;
-                LDX(Constant(Hex(d)));
-                Reserved;
-                LDY(Constant(Hex(d)));
-                Reserved;
-            ]
+                if
+                    register = a
+                then
+                    LDA(Constant(Hex(d)))
+                else begin
+                    if
+                        register = x
+                    then
+                        LDX(Constant(Hex(d)))
+                    else
+                        LDY(Constant(Hex(d)))
+                end
+            ] @ [Reserved]
         | Ast.True _ ->
             [
-                LDA(Memory_address(Hex(true_address)));
-                Reserved;
-                LDX(Memory_address(Hex(true_address)));
-                Reserved;
-                LDY(Memory_address(Hex(true_address)));
-                Reserved;
-            ]
+                if
+                    register = a
+                then
+                    LDA(Memory_address(Hex(true_address)))
+                else begin
+                    if register = x
+                    then
+                        LDX(Memory_address(Hex(true_address)))
+                    else
+                        LDY(Memory_address(Hex(true_address)))
+                end
+            ] @ [Reserved]
         | Ast.False _ ->
             [
-                LDA(Memory_address(Hex(false_address)));
-                Reserved;
-                LDX(Memory_address(Hex(false_address)));
-                Reserved;
-                LDY(Memory_address(Hex(false_address)));
-                Reserved;
-            ]
+                if
+                    register = a
+                then
+                    LDA(Memory_address(Hex(false_address)))
+                else begin
+                    if register = x
+                    then
+                        LDX(Memory_address(Hex(false_address)))
+                    else
+                        LDY(Memory_address(Hex(false_address)))
+                end
+            ] @ [Reserved]
         | Ast.Char_List (xs, _) ->
             [
                 LDA(Memory_address(st#get_address ast));
@@ -149,6 +175,7 @@ let assembly_list_of_ast ast st =
                 LDX(Memory_address(st#get_address ast));
                 Reserved;
             ]
+        | _ -> raise Not_found
     in
     List.iteri (fun i x -> Array.set memory i x) (func ast);
     Array.to_list memory
@@ -161,7 +188,7 @@ let string_of_value x = match x with
     | Constant x -> string_of_constant x
 let rec string_of_hex_list hex_list =
     (* http://stackoverflow.com/a/10440025/868465 *)
-    let string_of_int = Printf.sprintf "%x" in
+    let string_of_int = Printf.sprintf "%X" in
     match hex_list with
     | [] -> ""
     (* this is the two-character version *)

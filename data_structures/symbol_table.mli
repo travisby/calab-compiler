@@ -17,4 +17,5 @@ class symboltable :
     method leave : unit
     method visit : unit
     method get_address : Ast.ast -> Assembly.memory_address
+    method get_temp_address : Assembly.memory_address
   end

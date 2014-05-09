@@ -65,7 +65,8 @@ class symboltable =
                 | Scope (t, _, _) -> ref t
                 | Global (t, _) -> ref t
         (* TODO *)
-        method get_address (ast : Ast.ast) = Assembly.Hex(0)
+        method get_address (ast : Ast.ast) = (* TODO *) Assembly.Hex(0x00)
+        method get_temp_address = Assembly.Hex(0xFF)
         method leave =
             nextChild <- 0;
             self#exit;
