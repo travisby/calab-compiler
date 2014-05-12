@@ -56,12 +56,12 @@ let assembly_list_of_ast ast st =
                 st#leave;
                 value
         | Ast.Print_Statement (x, _) when typeof x st = type_int ->
-            func x @ [
+            func ~register:y x @ [
                 LDX(Constant(Hex(1)));
                 SYS;
             ]
         | Ast.Print_Statement (x, _) when typeof x st = type_string ->
-            func x @ [
+            func ~register:y x @ [
                 LDX(Constant(Hex(2)));
                 Reserved;
                 SYS;
@@ -88,7 +88,7 @@ let assembly_list_of_ast ast st =
                     | Ast.Equallity_Test _
                         | Ast.Inequallity_Test _
                     ->
-                        func x @ [
+                        func ~register:y x @ [
                             LDX(Constant(Hex(2)));
                             Reserved;
                             SYS;
