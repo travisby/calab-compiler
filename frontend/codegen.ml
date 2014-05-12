@@ -73,6 +73,7 @@ let assembly_list_of_ast ast st =
                         [
                             LDY(Memory_address(Hex(true_address)));
                             Reserved;
+                            Reserved;
                             LDX(Constant(Hex(2)));
                             Reserved;
                             SYS;
@@ -80,6 +81,7 @@ let assembly_list_of_ast ast st =
                     | Ast.False _ ->
                         [
                             LDY(Memory_address(Hex(false_address)));
+                            Reserved;
                             Reserved;
                             LDX(Constant(Hex(2)));
                             Reserved;
@@ -100,6 +102,7 @@ let assembly_list_of_ast ast st =
             func y @ [
                 STA(st#get_address x);
                 Reserved;
+                Reserved;
             ]
         | Ast.Var_Decl (x, y, _) -> []
         | Ast.While_Statement (x, y, _) -> raise Not_found
@@ -110,16 +113,45 @@ let assembly_list_of_ast ast st =
                 (* TODO have an optional parameter saying where to save things *)
                 LDA(Memory_address(st#get_address ast));
                 Reserved;
+                Reserved;
                 LDY(Memory_address(st#get_address ast));
                 Reserved;
+                Reserved;
                 LDX(Memory_address(st#get_address ast));
+                Reserved;
                 Reserved;
         ]
         | Ast.Addition (digit, expr, _) ->
                 (func ~register: a digit)
-                @ [STA(st#get_temp_address); Reserved]
-                @ (func ~register: a digit)
-                @ [ADC(st#get_temp_address); Reserved]
+                @ [STA(st#get_temp_address); Reserved; Reserved]
+                @ (func ~register: a expr)
+                @ [ADC(st#get_temp_address); Reserved; Reserved]
+                @ if
+                    register = a
+                then []
+                else begin
+                    if
+                        register = x
+                    then begin
+                        [
+                            STA(st#get_temp_address);
+                            Reserved;
+                            Reserved;
+                            LDX(Memory_address(st#get_temp_address));
+                            Reserved;
+                            Reserved;
+                        ]
+                    end else begin (* register = y *)
+                        [
+                            STA(st#get_temp_address);
+                            Reserved;
+                            Reserved;
+                            LDY(Memory_address(st#get_temp_address));
+                            Reserved;
+                            Reserved;
+                        ]
+                    end
+                end
         | Ast.Equallity_Test (x, y, _) -> raise Not_found
         | Ast.Inequallity_Test (x, y, _) -> raise Not_found
         | Ast.Char (x, _) -> raise Not_found
@@ -151,7 +183,7 @@ let assembly_list_of_ast ast st =
                     else
                         LDY(Memory_address(Hex(true_address)))
                 end
-            ] @ [Reserved]
+            ] @ [Reserved; Reserved]
         | Ast.False _ ->
             [
                 if
@@ -165,15 +197,15 @@ let assembly_list_of_ast ast st =
                     else
                         LDY(Memory_address(Hex(false_address)))
                 end
-            ] @ [Reserved]
+            ] @ [Reserved; Reserved]
         | Ast.Char_List (xs, _) ->
             [
                 LDA(Memory_address(st#get_address ast));
-                Reserved;
+                Reserved; Reserved;
                 LDY(Memory_address(st#get_address ast));
-                Reserved;
+                Reserved; Reserved;
                 LDX(Memory_address(st#get_address ast));
-                Reserved;
+                Reserved; Reserved;
             ]
         | _ -> raise Not_found
     in
@@ -181,8 +213,15 @@ let assembly_list_of_ast ast st =
     Array.to_list memory
 let string_of_hex x = match x with
     | Hex x -> string_of_int x
-let string_of_memory_address x = string_of_hex x
-let string_of_constant x = string_of_hex x
+let string_of_memory_address x =
+    (* Ensure the usage of two bytes *)
+    let res = string_of_hex x in
+    if String.length res <=2
+    then 
+        "$" ^ res ^ " 00"
+    else 
+        "$" ^ res
+let string_of_constant x = "#$" ^ string_of_hex x
 let string_of_value x = match x with
     Memory_address x -> string_of_memory_address x
     | Constant x -> string_of_constant x
@@ -211,20 +250,23 @@ let rec string_of_assembly_list assembly_list =
         | Reserved -> ""
     in String.concat " " (List.map string_of_instruction assembly_list)
 let rec assemble assembly_list =
+    let needs_zero hex = match hex with
+        | Hex x -> x < 0xFF
+    in
     let assemble_one instruction = match instruction with
         | LDA (Constant x) -> [Hex 0xA9; x]
-        | LDA (Memory_address x) -> [Hex 0xAD; x]
-        | STA x -> [Hex 0x8D; x]
-        | ADC x -> [Hex 0x6D; x]
+        | LDA (Memory_address x) -> [Hex 0xAD; x] @ (if needs_zero(x) then [Hex 0x00] else [])
+        | STA x -> [Hex 0x8D; x] @ (if needs_zero(x) then [Hex 0x00] else [])
+        | ADC x -> [Hex 0x6D; x] @ (if needs_zero(x) then [Hex 0x00] else [])
         | LDX (Constant x) -> [Hex 0xA2; x]
-        | LDX (Memory_address x) -> [Hex 0xAE; x]
+        | LDX (Memory_address x) -> [Hex 0xAE; x] @ (if needs_zero(x) then [Hex 0x00] else [])
         | LDY (Constant x) -> [Hex 0xA0; x]
-        | LDY (Memory_address x) -> [Hex 0xAC; x]
+        | LDY (Memory_address x) -> [Hex 0xAC; x] @ (if needs_zero(x) then [Hex 0x00] else [])
         | NOP -> [Hex 0xEA]
         | BRK -> [Hex 0x00]
-        | CPX x -> [Hex 0xEC; x]
-        | BNE x -> [Hex 0xEF; x]
-        | INC x -> [Hex 0xEE; x]
+        | CPX x -> [Hex 0xEC; x] @ (if needs_zero(x) then [Hex 0x00] else [])
+        | BNE x -> [Hex 0xEF; x] @ (if needs_zero(x) then [Hex 0x00] else [])
+        | INC x -> [Hex 0xEE; x] @ (if needs_zero(x) then [Hex 0x00] else [])
         | SYS -> [Hex 0xFF]
         | Reserved -> []
     in
