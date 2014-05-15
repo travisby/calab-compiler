@@ -20,4 +20,5 @@ class symboltable :
     method get_temp_address : Assembly.memory_address
     method is_in_heap : string -> bool
     method get_heap_address : string -> int
+    method reserve_static_space : Ast.ast -> unit
   end

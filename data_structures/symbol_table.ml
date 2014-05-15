@@ -67,7 +67,12 @@ class symboltable =
          * 6 = false \0
          *)
         val mutable pseudo_heap_pointer = 0xFF - 5 - 6
+        val mutable static_pointer = 0
         val heap = Hashtbl.create 2
+        val static = Hashtbl.create 0
+        method reserve_static_space ast =
+            Hashtbl.add static (self#get_id_ast ast) static_pointer;
+            static_pointer <- static_pointer + 1;
         method is_in_heap (str : string) =
             if
                 Hashtbl.mem heap str
@@ -84,7 +89,7 @@ class symboltable =
         method private get_current_table = match !current_scope with
                 | Scope (t, _, _) -> ref t
                 | Global (t, _) -> ref t
-        method get_address (ast : Ast.ast) = (* TODO *) Assembly.Hex(0x00)
+        method get_address (ast : Ast.ast) = Assembly.Hex(Hashtbl.find static (self#get_id_ast ast))
         method get_temp_address = Assembly.Hex(0x00)
         method leave =
             nextChild <- 0;
@@ -159,6 +164,9 @@ class symboltable =
             | Cst.Id (x, _) ->
                     let temp_scope_pointer = self#get_containing_st_pointer id in
                     ref ((self#get_symbol_table !temp_scope_pointer)#get x)
+            | _ -> raise IncorrectCSTElementsInSymbolTableError
+        method private get_id_ast id = match id with
+            | Ast.Id (x, y) -> self#get_id (Cst.Id (x, y))
             | _ -> raise IncorrectCSTElementsInSymbolTableError
         method assign id = match id with
             | Cst.Id (x, _) ->

@@ -135,7 +135,9 @@ let assembly_list_of_ast ast st =
                 Reserved;
                 Reserved;
             ]
-        | Ast.Var_Decl (x, y, _) -> []
+        | Ast.Var_Decl (x, y, _) ->
+            st#reserve_static_space y;
+            []
         (* Overwrites X, A register *)
         | Ast.While_Statement (bool_expr, block, pos) ->
             let compare = func ~register:x bool_expr in
