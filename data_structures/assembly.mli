@@ -1,4 +1,6 @@
-type hex = Hex of int
+type hex =
+    Hex of int
+    | Temp_Hex of int ref
 type memory_address = hex
 type constant = hex
 type value = 
@@ -17,5 +19,6 @@ type assembly =
     | INC of memory_address
     | SYS
     | Data of hex (* used for straight data in heap *)
+    | Temp of hex
     | Reserved (* Used after two-byte commands to reserve space *)
 val max_address : int

@@ -396,6 +396,7 @@ let assembly_list_of_ast ast st =
     Array.to_list memory
 let string_of_hex x = match x with
     | Hex x -> string_of_int x
+    | Temp_Hex x -> string_of_int !x
 let string_of_memory_address x =
     (* Ensure the usage of two bytes *)
     let res = string_of_hex x in
@@ -417,6 +418,7 @@ let rec string_of_hex_list hex_list =
     | Hex x :: xs when x >= 0xF -> "" ^ string_of_int x ^ " " ^ string_of_hex_list xs
     (* and this is the one character *)
     | Hex x :: xs -> "0" ^ string_of_int x ^ " " ^ string_of_hex_list xs
+    | Temp_Hex x :: xs -> string_of_hex_list (Hex !x :: xs)
 let rec string_of_assembly_list assembly_list =
     let string_of_instruction instruction = match instruction with
         | LDA x -> "LDA " ^ string_of_value x
@@ -432,10 +434,12 @@ let rec string_of_assembly_list assembly_list =
         | SYS -> "SYS"
         | Data x -> string_of_hex x
         | Reserved -> ""
+        | Temp x -> string_of_hex x
     in String.concat " " (List.map string_of_instruction assembly_list)
 let rec assemble assembly_list =
     let needs_zero hex = match hex with
         | Hex x -> x < 0xFF
+        | Temp_Hex x -> !x < 0xFF
     in
     let assemble_one instruction = match instruction with
         | LDA (Constant x) -> [Hex 0xA9; x]
@@ -453,6 +457,7 @@ let rec assemble assembly_list =
         | INC x -> [Hex 0xEE; x] @ (if needs_zero(x) then [Hex 0x00] else [])
         | SYS -> [Hex 0xFF]
         | Data x -> [x]
+        | Temp x -> [x]
         | Reserved -> []
     in
     List.flatten (List.map assemble_one assembly_list)

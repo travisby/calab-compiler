@@ -89,7 +89,7 @@ class symboltable =
         method private get_current_table = match !current_scope with
                 | Scope (t, _, _) -> ref t
                 | Global (t, _) -> ref t
-        method get_address (ast : Ast.ast) = Assembly.Hex(Hashtbl.find static (self#get_id_ast ast))
+        method get_address (ast : Ast.ast) = Assembly.Temp_Hex(ref (Hashtbl.find static (self#get_id_ast ast)))
         method get_temp_address = Assembly.Hex(0x00)
         method leave =
             nextChild <- 0;
