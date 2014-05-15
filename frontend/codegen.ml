@@ -55,7 +55,7 @@ let assembly_list_of_ast ast st =
     push_heap (Data (Hex(0x73)));
     push_heap (Data (Hex(0x6c)));
     push_heap (Data (Hex(0x61)));
-    push_heap (Data (Hex(0x65)));
+    push_heap (Data (Hex(0x66)));
     (* true *)
     push_heap (Data (Hex(0x00)));
     push_heap (Data (Hex(0x65)));
