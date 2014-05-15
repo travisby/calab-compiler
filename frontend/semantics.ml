@@ -42,7 +42,33 @@ let analyze cst =
              * them out.  Can't throw them out if we're returning the AST in our
              * inner_func!
              *)
-            | Cst.Program (block, _, pos) -> Ast.Program (inner_func block, pos)
+            | Cst.Program (block, _, pos) ->
+                    begin
+                        match block with
+                        | Cst.Block (_, statement_list, _, pos) ->
+                            let rec gathered_statements sl = 
+                                begin
+                                    match sl with
+                                        | Cst.Statement_List (statement, statement_list, _) -> [statement] @ (gathered_statements statement_list)
+                                        | Cst.Empty_Statement_List _ -> []
+                                        | _ -> raise Not_found
+                                end
+                            in
+                            let statements = gathered_statements statement_list in
+                            (*
+                             * Word of warning!
+                             * ----------------
+                             *
+                             * statements_as_ast will force execution of adding stuff
+                             * to the symbol table.  If this isn't before
+                             * st#warn_on_unused... then the Symbol Table will always be
+                             * empty, because nothing has filled it yet!
+                             *)
+                            let statements_as_ast = List.map inner_func statements in
+                            st#warn_on_unused_in_current_scope;
+                            Program (Block (statements_as_ast, pos), pos)
+                        | _ -> raise Not_found 
+                    end
             | Cst.Block (_, statement_list, _, pos) ->
                     st#enter;
                     let rec gathered_statements sl = 

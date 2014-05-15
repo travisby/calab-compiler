@@ -76,7 +76,7 @@ let assembly_list_of_ast ast st =
      *)
     let rec func ?register:(register=a) ast = match ast with
         | Ast.Program (x, _) ->
-                (* Program does what block does, except enters a new scope *)
+                (* Program does what block does, except does not enter a new scope *)
                 begin
                     match x with
                         | Ast.Block (xs, _) ->
