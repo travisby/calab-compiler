@@ -286,7 +286,7 @@ let assembly_list_of_ast ast st =
                     Reserved;
                     Reserved
                 ]
-        | Ast.Char (x, _) -> raise Not_found
+        | Ast.Char (x, _) -> (* This case shouldn't happen.  It's handled in CharList *) raise Not_found
         | Ast.Digit (d, _) ->
             [
                 if
