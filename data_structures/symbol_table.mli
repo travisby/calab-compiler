@@ -18,4 +18,5 @@ class symboltable :
     method visit : unit
     method get_address : Ast.ast -> Assembly.memory_address
     method get_temp_address : Assembly.memory_address
+    method is_in_heap : Ast.ast -> bool
   end

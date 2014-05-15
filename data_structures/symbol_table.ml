@@ -61,6 +61,7 @@ class symboltable =
         val mutable head = ref scope_init
         val mutable current_scope = ref scope_init
         val mutable nextChild = -1
+        method is_in_heap (ast : Ast.ast) = (* TODO *) false
         method private get_current_table = match !current_scope with
                 | Scope (t, _, _) -> ref t
                 | Global (t, _) -> ref t

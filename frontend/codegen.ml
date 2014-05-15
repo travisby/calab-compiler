@@ -36,7 +36,9 @@ let typeof ast st = match ast with
     -> type_bool
     | Ast.Char_List (xs, _) -> type_string
     | _ -> raise Not_found (* These do not have types *)
-
+let to_char ast = match ast with
+    | Ast.Char (x, _) -> x
+    | _ -> raise Not_found
 let assembly_list_of_ast ast st =
     let memory = Array.make max_address BRK in
     let heap = Array.make max_address BRK in
@@ -356,6 +358,20 @@ let assembly_list_of_ast ast st =
                 end
             ] @ [Reserved; Reserved]
         | Ast.Char_List (xs, _) ->
+            (* Pay no attention to the code cruft behind the curtain *)
+            (*
+             * There is no reason other than "Oh man I need to get this done"
+             * for having the symbol table track whether or not something is in
+             * the heap
+             *)
+            if
+                st#is_in_heap ast
+            then begin
+                push_heap(Data(Hex(0x00)));
+                List.iter (fun x -> push_heap (Data(Hex(Char.code (to_char x))))) (List.rev xs)
+            end else
+                ()
+            ;
             [
                 if
                     register = a
