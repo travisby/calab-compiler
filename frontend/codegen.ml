@@ -122,7 +122,8 @@ let assembly_list_of_ast ast st =
                 Reserved;
         ]
         | Ast.Addition (digit, expr, _) ->
-                (func ~register: a digit)
+                (* NOTICE: WIPES A REGISTER *)
+                (func ~register:a digit)
                 @ [STA(st#get_temp_address); Reserved; Reserved]
                 @ (func ~register: a expr)
                 @ [ADC(st#get_temp_address); Reserved; Reserved]
@@ -152,8 +153,61 @@ let assembly_list_of_ast ast st =
                         ]
                     end
                 end
-        | Ast.Equallity_Test (x, y, _) -> raise Not_found
-        | Ast.Inequallity_Test (x, y, _) -> raise Not_found
+        (*
+         * Equallity test works by loading the register with either true, or
+         * false address.  NOT by setting the Z Flag (ultimately)
+         * Anything using the equality test should BNE on address = false
+         *
+         * The ZFlag is not the best way to do this because d == (true != false)
+         * would have the z flag only returning the last possible result,
+         * because it cannot be read.  We would need some form of lookahead in
+         * codegen to utilize it.  This produces less code overall for
+         * complicated expressions
+         *
+         * OVERWRITES A, X
+         *)
+        | Ast.Equallity_Test (expr1, expr2, _) ->
+                (* Evaluate expr1 and store into temp *)
+                func ~register:a expr1
+                @ [STA(st#get_temp_address); Reserved; Reserved]
+                (* Evaluate expr2 into register x *)
+                @ func ~register:x expr2
+                (* Run our comparison early, so we can wipe registers *)
+                @ [CPX(st#get_temp_address); Reserved; Reserved]
+                (* Save false into temp *)
+                @ [LDA(Memory_address(Hex(false_address))); Reserved]
+                @ [STA(st#get_temp_address); Reserved; Reserved]
+                (* If we are false, skip over... "temp = true" *)
+                @ [BNE(Hex(5)); Reserved]
+                (* If we are true, do "temp = true" *)
+                @ [
+                    LDA(Memory_address(Hex(true_address)));
+                    Reserved;
+                    STA(st#get_temp_address);
+                    Reserved;
+                    Reserved
+                ]
+        | Ast.Inequallity_Test (expr1, expr2, _) ->
+                (* Evaluate expr1 and store into temp *)
+                func ~register:a expr1
+                @ [STA(st#get_temp_address); Reserved; Reserved]
+                (* Evaluate expr2 into register x *)
+                @ func ~register:x expr2
+                (* Run our comparison early, so we can wipe registers *)
+                @ [CPX(st#get_temp_address); Reserved; Reserved]
+                (* Save true into temp *)
+                @ [LDA(Memory_address(Hex(true_address))); Reserved]
+                @ [STA(st#get_temp_address); Reserved; Reserved]
+                (* If we are false, skip over... "temp = false" *)
+                @ [BNE(Hex(5)); Reserved]
+                (* If we are true, do "temp = false" *)
+                @ [
+                    LDA(Memory_address(Hex(false_address)));
+                    Reserved;
+                    STA(st#get_temp_address);
+                    Reserved;
+                    Reserved
+                ]
         | Ast.Char (x, _) -> raise Not_found
         | Ast.Digit (d, _) ->
             [
