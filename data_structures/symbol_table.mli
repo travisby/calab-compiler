@@ -22,4 +22,5 @@ class symboltable :
     method get_heap_address : string -> int
     method reserve_static_space : Ast.ast -> unit
     method update_static_addresses : int -> unit
+    method sizeof_static : int
   end

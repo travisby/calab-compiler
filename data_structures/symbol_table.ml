@@ -70,6 +70,7 @@ class symboltable =
         val mutable static_pointer = 0
         val heap = Hashtbl.create 2
         val static = Hashtbl.create 0
+        method sizeof_static = Hashtbl.length static
         (* add start to every value *)
         method update_static_addresses start = Hashtbl.iter (fun key value -> Hashtbl.replace static key (start + value)) static
         method reserve_static_space ast =

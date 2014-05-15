@@ -1,6 +1,8 @@
 open Utils;;
 open Assembly;;
 
+exception Too_Large_Of_Program
+
 let type_int = Ast.Int {charno=(-1); lineno=(-1)}
 let type_bool = Ast.Boolean {charno=(-1); lineno=(-1)}
 let type_string = Ast.String {charno=(-1); lineno=(-1)}
@@ -392,6 +394,17 @@ let assembly_list_of_ast ast st =
             ] @ [Reserved]
         | _ -> raise Not_found
     in
+    let instructions = func ast in
+    (* update pointers *)
+    st#update_static_addresses  ((List.length instructions) + 1);
+    let static = Array.to_list (Array.make st#sizeof_static BRK) in 
+    (* Make sure we're not too big of a program *)
+    if
+        ((List.length instructions) + (List.length static) + (Array.length heap)) > max_address
+    then
+        raise Too_Large_Of_Program
+    else ()
+    ;
     List.iteri (fun i x -> Array.set memory i x) (func ast);
     Array.to_list memory
 let string_of_hex x = match x with
