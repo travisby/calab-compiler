@@ -16,5 +16,6 @@ type assembly =
     | BNE of memory_address
     | INC of memory_address
     | SYS
+    | Data of hex (* used for straight data in heap *)
     | Reserved (* Used after two-byte commands to reserve space *)
 val max_address : int

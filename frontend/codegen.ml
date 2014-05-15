@@ -45,6 +45,20 @@ let assembly_list_of_ast ast st =
         Array.set heap !heap_pointer item;
         heap_pointer := !heap_pointer - 1
     in
+    (* false *)
+    push_heap (Data (Hex(0x00)));
+    push_heap (Data (Hex(0x65)));
+    push_heap (Data (Hex(0x73)));
+    push_heap (Data (Hex(0x6c)));
+    push_heap (Data (Hex(0x61)));
+    push_heap (Data (Hex(0x65)));
+    (* true *)
+    push_heap (Data (Hex(0x00)));
+    push_heap (Data (Hex(0x65)));
+    push_heap (Data (Hex(0x75)));
+    push_heap (Data (Hex(0x72)));
+    push_heap (Data (Hex(0x74)));
+
     (*
      * NOTE
      *
@@ -365,6 +379,7 @@ let rec string_of_assembly_list assembly_list =
         | BNE x -> "BNE " ^ string_of_memory_address x
         | INC x -> "INC " ^ string_of_memory_address x
         | SYS -> "SYS"
+        | Data x -> string_of_hex x
         | Reserved -> ""
     in String.concat " " (List.map string_of_instruction assembly_list)
 let rec assemble assembly_list =
@@ -386,6 +401,7 @@ let rec assemble assembly_list =
         | BNE x -> [Hex 0xEF; x] @ (if needs_zero(x) then [Hex 0x00] else [])
         | INC x -> [Hex 0xEE; x] @ (if needs_zero(x) then [Hex 0x00] else [])
         | SYS -> [Hex 0xFF]
+        | Data x -> [x]
         | Reserved -> []
     in
     List.flatten (List.map assemble_one assembly_list)
