@@ -230,11 +230,11 @@ let assembly_list_of_ast ast st =
          * OVERWRITES A, X
          *)
         | Ast.Equallity_Test (expr1, expr2, _) ->
-                (* Evaluate expr1 and store into temp *)
-                func ~register:a expr1
+                (* Evaluate expr1 into register x *)
+                func ~register:x expr1
+                (* Evaluate expr2 and store in temp *)
+                @ func ~register:a expr2
                 @ [STA(st#get_temp_address); Reserved; Reserved]
-                (* Evaluate expr2 into register x *)
-                @ func ~register:x expr2
                 (* Run our comparison early, so we can wipe registers *)
                 @ [CPX(st#get_temp_address); Reserved; Reserved]
                 (* Save false into ~register *)
@@ -254,7 +254,7 @@ let assembly_list_of_ast ast st =
                     Reserved
                 ]
                 (* If we are false, skip over... "temp = true" *)
-                @ [BNE(Hex(5)); Reserved]
+                @ [BNE(Hex(1)); Reserved]
                 (* If we are true, do "~register = true" *)
                 @ [
                     if
@@ -272,11 +272,11 @@ let assembly_list_of_ast ast st =
                     Reserved
                 ]
         | Ast.Inequallity_Test (expr1, expr2, _) ->
-                (* Evaluate expr1 and store into temp *)
-                func ~register:a expr1
+                (* Evaluate expr1 into register x *)
+                func ~register:x expr1
+                (* Evaluate expr2 and store in temp *)
+                @ func ~register:a expr2
                 @ [STA(st#get_temp_address); Reserved; Reserved]
-                (* Evaluate expr2 into register x *)
-                @ func ~register:x expr2
                 (* Run our comparison early, so we can wipe registers *)
                 @ [CPX(st#get_temp_address); Reserved; Reserved]
                 (* Save true into ~register *)
@@ -296,7 +296,7 @@ let assembly_list_of_ast ast st =
                     Reserved
                 ]
                 (* If we are false, skip over... "temp = false" *)
-                @ [BNE(Hex(5)); Reserved]
+                @ [BNE(Hex(1)); Reserved]
                 (* If we are true, do "~register = false" *)
                 @ [
                     if
@@ -465,7 +465,7 @@ let rec assemble assembly_list =
         | NOP -> [Hex 0xEA]
         | BRK -> [Hex 0x00]
         | CPX x -> [Hex 0xEC; x] @ (if needs_zero(x) then [Hex 0x00] else [])
-        | BNE x -> [Hex 0xEF; x] @ (if needs_zero(x) then [Hex 0x00] else [])
+        | BNE x -> [Hex 0xD0; x] @ (if needs_zero(x) then [Hex 0x00] else [])
         | INC x -> [Hex 0xEE; x] @ (if needs_zero(x) then [Hex 0x00] else [])
         | SYS -> [Hex 0xFF]
         | Data x -> [x]
