@@ -77,7 +77,7 @@ class symboltable =
                 (* subtract the space from our terrible fake pointer to the heap *)
                 (* the + 1 is for \0 *)
                 pseudo_heap_pointer <- pseudo_heap_pointer - ((String.length str) + 1);
-                Hashtbl.add heap str true;
+                Hashtbl.add heap str pseudo_heap_pointer;
                 false
             end
         method private get_current_table = match !current_scope with
