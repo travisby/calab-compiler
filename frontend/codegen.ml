@@ -394,12 +394,14 @@ let assembly_list_of_ast ast st =
     let static = Array.to_list (Array.make st#sizeof_static BRK) in 
     (* Make sure we're not too big of a program *)
     if
-        ((List.length instructions) + (List.length static) + (Array.length heap)) > max_address
+        ((List.length instructions) + (List.length static) + (max_address - !heap_pointer)) > max_address
     then
         raise Too_Large_Of_Program
     else ()
     ;
-    List.iteri (fun i x -> Array.set memory i x) (func ast);
+    List.iteri (fun i x -> Array.set memory i x) (instructions @ static);
+    (* add all memory of heap that's... past the heap pointer *)
+    Array.iteri (fun i x -> if i >= !heap_pointer then Array.set memory i x else ()) heap;
     Array.to_list memory
 let string_of_hex x = match x with
     | Hex x -> string_of_int x
