@@ -17,7 +17,8 @@ let false_string =
     let result = "falsex" in
     String.set result 5 '\000';
     result
-let true_address = Assembly.max_address - (String.length true_string)
+(* No idea why + 1, but it works.... *)
+let true_address = Assembly.max_address - (String.length true_string) + 1
 let false_address = true_address - (String.length false_string)
 let typeof ast st = match ast with
     | Ast.Id (x, pos) ->
@@ -49,6 +50,12 @@ let assembly_list_of_ast ast st =
         Array.set heap !heap_pointer item;
         heap_pointer := !heap_pointer - 1;
     in
+    (* true *)
+    push_heap (Data (Hex(0x00)));
+    push_heap (Data (Hex(0x65)));
+    push_heap (Data (Hex(0x75)));
+    push_heap (Data (Hex(0x72)));
+    push_heap (Data (Hex(0x74)));
     (* false *)
     push_heap (Data (Hex(0x00)));
     push_heap (Data (Hex(0x65)));
@@ -56,12 +63,6 @@ let assembly_list_of_ast ast st =
     push_heap (Data (Hex(0x6c)));
     push_heap (Data (Hex(0x61)));
     push_heap (Data (Hex(0x66)));
-    (* true *)
-    push_heap (Data (Hex(0x00)));
-    push_heap (Data (Hex(0x65)));
-    push_heap (Data (Hex(0x75)));
-    push_heap (Data (Hex(0x72)));
-    push_heap (Data (Hex(0x74)));
 
     (*
      * NOTE
