@@ -204,6 +204,7 @@ let assembly_list_of_ast ast st =
                         else
                             LDY(Memory_address(Hex(false_address)))
                     end;
+                    Reserved;
                     Reserved
                 ]
                 (* If we are false, skip over... "temp = true" *)
@@ -222,6 +223,7 @@ let assembly_list_of_ast ast st =
                         else
                             LDY(Memory_address(Hex(true_address)))
                     end;
+                    Reserved;
                     Reserved
                 ]
         | Ast.Inequallity_Test (expr1, expr2, _) ->
@@ -246,6 +248,7 @@ let assembly_list_of_ast ast st =
                         else
                             LDY(Memory_address(Hex(true_address)))
                     end;
+                    Reserved;
                     Reserved
                 ]
                 (* If we are false, skip over... "temp = false" *)
@@ -264,6 +267,7 @@ let assembly_list_of_ast ast st =
                         else
                             LDY(Memory_address(Hex(false_address)))
                     end;
+                    Reserved;
                     Reserved
                 ]
         | Ast.Char (x, _) -> raise Not_found
