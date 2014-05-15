@@ -93,6 +93,7 @@ let assembly_list_of_ast ast st =
         | Ast.Print_Statement (x, _) when typeof x st = type_int ->
             func ~register:y x @ [
                 LDX(Constant(Hex(1)));
+                Reserved;
                 SYS;
             ]
         | Ast.Print_Statement (x, _) when typeof x st = type_string ->
