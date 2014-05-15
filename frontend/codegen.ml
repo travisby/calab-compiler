@@ -174,17 +174,39 @@ let assembly_list_of_ast ast st =
                 @ func ~register:x expr2
                 (* Run our comparison early, so we can wipe registers *)
                 @ [CPX(st#get_temp_address); Reserved; Reserved]
-                (* Save false into temp *)
-                @ [LDA(Memory_address(Hex(false_address))); Reserved]
+                (* Save false into ~register *)
+                @ [
+                    if
+                        register = a
+                    then
+                        LDA(Memory_address(Hex(false_address)))
+                    else begin
+                        if
+                            register = x
+                        then
+                            LDX(Memory_address(Hex(false_address)))
+                        else
+                            LDY(Memory_address(Hex(false_address)))
+                    end;
+                    Reserved
+                ]
                 @ [STA(st#get_temp_address); Reserved; Reserved]
                 (* If we are false, skip over... "temp = true" *)
                 @ [BNE(Hex(5)); Reserved]
                 (* If we are true, do "temp = true" *)
                 @ [
-                    LDA(Memory_address(Hex(true_address)));
-                    Reserved;
-                    STA(st#get_temp_address);
-                    Reserved;
+                    if
+                        register = a
+                    then
+                        LDA(Memory_address(Hex(true_address)))
+                    else begin
+                        if
+                            register = x
+                        then
+                            LDX(Memory_address(Hex(true_address)))
+                        else
+                            LDY(Memory_address(Hex(true_address)))
+                    end;
                     Reserved
                 ]
         | Ast.Inequallity_Test (expr1, expr2, _) ->
