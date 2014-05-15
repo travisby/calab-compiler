@@ -61,11 +61,28 @@ class symboltable =
         val mutable head = ref scope_init
         val mutable current_scope = ref scope_init
         val mutable nextChild = -1
-        method is_in_heap (str : string) = (* TODO *) false
+        (* not proud of this...
+         * if there are any bugs, this is probably the first place to look
+         * 5 = true \0
+         * 6 = false \0
+         *)
+        val mutable pseudo_heap_pointer = 0xFF - 5 - 6
+        val heap = Hashtbl.create 2
+        method is_in_heap (str : string) =
+            if
+                Hashtbl.mem heap str
+            then
+                true
+            else begin
+                (* subtract the space from our terrible fake pointer to the heap *)
+                (* the + 1 is for \0 *)
+                pseudo_heap_pointer <- pseudo_heap_pointer - ((String.length str) + 1);
+                Hashtbl.add heap str true;
+                false
+            end
         method private get_current_table = match !current_scope with
                 | Scope (t, _, _) -> ref t
                 | Global (t, _) -> ref t
-        (* TODO *)
         method get_address (ast : Ast.ast) = (* TODO *) Assembly.Hex(0x00)
         method get_temp_address = Assembly.Hex(0x00)
         method leave =
