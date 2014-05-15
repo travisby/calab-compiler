@@ -42,12 +42,12 @@ let to_char ast = match ast with
     | Ast.Char (x, _) -> x
     | _ -> raise Not_found
 let assembly_list_of_ast ast st =
-    let memory = Array.make max_address BRK in
-    let heap = Array.make max_address BRK in
+    let memory = Array.make (max_address + 1) BRK in
+    let heap = Array.make (max_address + 1) BRK in
     let heap_pointer = ref max_address in
     let push_heap item =
         Array.set heap !heap_pointer item;
-        heap_pointer := !heap_pointer - 1
+        heap_pointer := !heap_pointer - 1;
     in
     (* true *)
     push_heap (Data (Hex(0x00)));
