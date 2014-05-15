@@ -105,8 +105,7 @@ let assembly_list_of_ast ast st =
                 match x with
                     | Ast.True _ ->
                         [
-                            LDY(Memory_address(Hex(true_address)));
-                            Reserved;
+                            LDY(Constant(Hex(true_address)));
                             Reserved;
                             LDX(Constant(Hex(2)));
                             Reserved;
@@ -114,8 +113,7 @@ let assembly_list_of_ast ast st =
                         ]
                     | Ast.False _ ->
                         [
-                            LDY(Memory_address(Hex(false_address)));
-                            Reserved;
+                            LDY(Constant(Hex(false_address)));
                             Reserved;
                             LDX(Constant(Hex(2)));
                             Reserved;
@@ -242,16 +240,15 @@ let assembly_list_of_ast ast st =
                     if
                         register = a
                     then
-                        LDA(Memory_address(Hex(false_address)))
+                        LDA(Constant(Hex(false_address)))
                     else begin
                         if
                             register = x
                         then
-                            LDX(Memory_address(Hex(false_address)))
+                            LDX(Constant(Hex(false_address)))
                         else
-                            LDY(Memory_address(Hex(false_address)))
+                            LDY(Constant(Hex(false_address)))
                     end;
-                    Reserved;
                     Reserved
                 ]
                 (* If we are false, skip over... "temp = true" *)
@@ -261,16 +258,15 @@ let assembly_list_of_ast ast st =
                     if
                         register = a
                     then
-                        LDA(Memory_address(Hex(true_address)))
+                        LDA(Constant(Hex(true_address)))
                     else begin
                         if
                             register = x
                         then
-                            LDX(Memory_address(Hex(true_address)))
+                            LDX(Constant(Hex(true_address)))
                         else
-                            LDY(Memory_address(Hex(true_address)))
+                            LDY(Constant(Hex(true_address)))
                     end;
-                    Reserved;
                     Reserved
                 ]
         | Ast.Inequallity_Test (expr1, expr2, _) ->
@@ -286,16 +282,15 @@ let assembly_list_of_ast ast st =
                     if
                         register = a
                     then
-                        LDA(Memory_address(Hex(true_address)))
+                        LDA(Constant(Hex(true_address)))
                     else begin
                         if
                             register = x
                         then
-                            LDX(Memory_address(Hex(true_address)))
+                            LDX(Constant(Hex(true_address)))
                         else
-                            LDY(Memory_address(Hex(true_address)))
+                            LDY(Constant(Hex(true_address)))
                     end;
-                    Reserved;
                     Reserved
                 ]
                 (* If we are false, skip over... "temp = false" *)
@@ -305,16 +300,15 @@ let assembly_list_of_ast ast st =
                     if
                         register = a
                     then
-                        LDA(Memory_address(Hex(false_address)))
+                        LDA(Constant(Hex(false_address)))
                     else begin
                         if
                             register = x
                         then
-                            LDX(Memory_address(Hex(false_address)))
+                            LDX(Constant(Hex(false_address)))
                         else
-                            LDY(Memory_address(Hex(false_address)))
+                            LDY(Constant(Hex(false_address)))
                     end;
-                    Reserved;
                     Reserved
                 ]
         | Ast.Char (x, _) -> (* This case shouldn't happen.  It's handled in CharList *) raise Not_found
@@ -338,29 +332,29 @@ let assembly_list_of_ast ast st =
                 if
                     register = a
                 then
-                    LDA(Memory_address(Hex(true_address)))
+                    LDA(Constant(Hex(true_address)))
                 else begin
                     if register = x
                     then
-                        LDX(Memory_address(Hex(true_address)))
+                        LDX(Constant(Hex(true_address)))
                     else
-                        LDY(Memory_address(Hex(true_address)))
+                        LDY(Constant(Hex(true_address)))
                 end
-            ] @ [Reserved; Reserved]
+            ] @ [Reserved]
         | Ast.False _ ->
             [
                 if
                     register = a
                 then
-                    LDA(Memory_address(Hex(false_address)))
+                    LDA(Constant(Hex(false_address)))
                 else begin
                     if register = x
                     then
-                        LDX(Memory_address(Hex(false_address)))
+                        LDX(Constant(Hex(false_address)))
                     else
-                        LDY(Memory_address(Hex(false_address)))
+                        LDY(Constant(Hex(false_address)))
                 end
-            ] @ [Reserved; Reserved]
+            ] @ [Reserved]
         | Ast.Char_List (xs, _) ->
             (* Pay no attention to the code cruft behind the curtain *)
             (*
