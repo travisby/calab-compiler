@@ -364,8 +364,9 @@ let assembly_list_of_ast ast st =
              * for having the symbol table track whether or not something is in
              * the heap
              *)
+            let str = (String.concat "" (List.map (fun x -> Char.escaped (to_char x)) xs)) in
             if
-                st#is_in_heap (String.concat "" (List.map (fun x -> Char.escaped (to_char x)) xs))
+                st#is_in_heap str
             then begin
                 (* null *)
                 push_heap(Data(Hex(0x00)));
@@ -378,15 +379,15 @@ let assembly_list_of_ast ast st =
                 if
                     register = a
                 then
-                    LDA(Memory_address(st#get_address ast))
+                    LDA(Constant(Hex(st#get_heap_address str)))
                 else begin
                     if register = x
                     then
-                        LDX(Memory_address(st#get_address ast))
+                        LDX(Constant(Hex(st#get_heap_address str)))
                     else
-                        LDY(Memory_address(st#get_address ast))
+                        LDY(Constant(Hex(st#get_heap_address str)))
                 end
-            ] @ [Reserved; Reserved]
+            ] @ [Reserved]
         | _ -> raise Not_found
     in
     List.iteri (fun i x -> Array.set memory i x) (func ast);
