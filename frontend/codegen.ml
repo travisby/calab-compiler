@@ -39,6 +39,16 @@ let typeof ast st = match ast with
 
 let assembly_list_of_ast ast st =
     let memory = Array.make max_address BRK in
+    (*
+     * NOTE
+     *
+     * Addition will overwrite the A register regardless of what you tell it to
+     * due to architecture constraints.
+     *
+     * In/EquallityTest will overwrite both the A register and the X Register
+     * due to our code generation plan
+     *
+     *)
     let rec func ?register:(register=a) ast = match ast with
         | Ast.Program (x, _) ->
                 (* Program does what block does, except enters a new scope *)
@@ -190,10 +200,9 @@ let assembly_list_of_ast ast st =
                     end;
                     Reserved
                 ]
-                @ [STA(st#get_temp_address); Reserved; Reserved]
                 (* If we are false, skip over... "temp = true" *)
                 @ [BNE(Hex(5)); Reserved]
-                (* If we are true, do "temp = true" *)
+                (* If we are true, do "~register = true" *)
                 @ [
                     if
                         register = a
@@ -217,17 +226,38 @@ let assembly_list_of_ast ast st =
                 @ func ~register:x expr2
                 (* Run our comparison early, so we can wipe registers *)
                 @ [CPX(st#get_temp_address); Reserved; Reserved]
-                (* Save true into temp *)
-                @ [LDA(Memory_address(Hex(true_address))); Reserved]
-                @ [STA(st#get_temp_address); Reserved; Reserved]
+                (* Save true into ~register *)
+                @ [
+                    if
+                        register = a
+                    then
+                        LDA(Memory_address(Hex(true_address)))
+                    else begin
+                        if
+                            register = x
+                        then
+                            LDX(Memory_address(Hex(true_address)))
+                        else
+                            LDY(Memory_address(Hex(true_address)))
+                    end;
+                    Reserved
+                ]
                 (* If we are false, skip over... "temp = false" *)
                 @ [BNE(Hex(5)); Reserved]
-                (* If we are true, do "temp = false" *)
+                (* If we are true, do "~register = false" *)
                 @ [
-                    LDA(Memory_address(Hex(false_address)));
-                    Reserved;
-                    STA(st#get_temp_address);
-                    Reserved;
+                    if
+                        register = a
+                    then
+                        LDA(Memory_address(Hex(false_address)))
+                    else begin
+                        if
+                            register = x
+                        then
+                            LDX(Memory_address(Hex(false_address)))
+                        else
+                            LDY(Memory_address(Hex(false_address)))
+                    end;
                     Reserved
                 ]
         | Ast.Char (x, _) -> raise Not_found
