@@ -49,12 +49,6 @@ let assembly_list_of_ast ast st =
         Array.set heap !heap_pointer item;
         heap_pointer := !heap_pointer - 1;
     in
-    (* true *)
-    push_heap (Data (Hex(0x00)));
-    push_heap (Data (Hex(0x65)));
-    push_heap (Data (Hex(0x75)));
-    push_heap (Data (Hex(0x72)));
-    push_heap (Data (Hex(0x74)));
     (* false *)
     push_heap (Data (Hex(0x00)));
     push_heap (Data (Hex(0x65)));
@@ -62,6 +56,12 @@ let assembly_list_of_ast ast st =
     push_heap (Data (Hex(0x6c)));
     push_heap (Data (Hex(0x61)));
     push_heap (Data (Hex(0x65)));
+    (* true *)
+    push_heap (Data (Hex(0x00)));
+    push_heap (Data (Hex(0x65)));
+    push_heap (Data (Hex(0x75)));
+    push_heap (Data (Hex(0x72)));
+    push_heap (Data (Hex(0x74)));
 
     (*
      * NOTE
