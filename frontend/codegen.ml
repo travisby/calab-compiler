@@ -128,7 +128,7 @@ let assembly_list_of_ast ast st =
                     | _ -> raise Not_found
             end
         | Ast.Assignment_Statement (x, y, _) ->
-            func y @ [
+            func y ~register:a @ [
                 STA(st#get_address x);
                 Reserved;
                 Reserved;
