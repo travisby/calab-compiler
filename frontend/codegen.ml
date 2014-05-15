@@ -114,7 +114,6 @@ let assembly_list_of_ast ast st =
                     | _ -> raise Not_found
             end
         | Ast.Assignment_Statement (x, y, _) ->
-            (* TODO this for different types for x *)
             func y @ [
                 STA(st#get_address x);
                 Reserved;
@@ -123,17 +122,20 @@ let assembly_list_of_ast ast st =
         | Ast.Var_Decl (x, y, _) -> []
         | Ast.While_Statement (x, y, _) -> raise Not_found
         | Ast.If_Statement (x, y, _) -> raise Not_found
-        | Ast.Id (x, _) ->
+        | Ast.Id _ ->
             [
-                (* brute force solution *)
-                (* TODO have an optional parameter saying where to save things *)
-                LDA(Memory_address(st#get_address ast));
-                Reserved;
-                Reserved;
-                LDY(Memory_address(st#get_address ast));
-                Reserved;
-                Reserved;
-                LDX(Memory_address(st#get_address ast));
+                if
+                    register = a
+                then
+                    LDA(Memory_address(st#get_address ast))
+                else begin
+                    if
+                        register = x
+                    then
+                        LDY(Memory_address(st#get_address ast))
+                    else(* register = y *)
+                        LDX(Memory_address(st#get_address ast))
+                end;
                 Reserved;
                 Reserved;
         ]
