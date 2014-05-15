@@ -72,9 +72,13 @@ class symboltable =
         val static = Hashtbl.create 0
         method sizeof_static = Hashtbl.length static
         (* add start to every value *)
-        method update_static_addresses start = Hashtbl.iter (fun key value -> Hashtbl.replace static key (start + value)) static
+        method update_static_addresses start =
+            print_endline ("UPDATING STATIC TO... " ^ (string_of_int start));
+            Hashtbl.iter (fun key value -> print_endline (string_of_int !value)) static;
+            Hashtbl.iter (fun key value -> value := (start + !value)) static;
+            Hashtbl.iter (fun key value -> print_endline (string_of_int !value)) static;
         method reserve_static_space ast =
-            Hashtbl.add static (self#get_id_ast ast) static_pointer;
+            Hashtbl.add static (self#get_id_ast ast) (ref static_pointer);
             static_pointer <- static_pointer + 1;
         method is_in_heap (str : string) =
             if
@@ -92,7 +96,7 @@ class symboltable =
         method private get_current_table = match !current_scope with
                 | Scope (t, _, _) -> ref t
                 | Global (t, _) -> ref t
-        method get_address (ast : Ast.ast) = Assembly.Temp_Hex(ref (Hashtbl.find static (self#get_id_ast ast)))
+        method get_address (ast : Ast.ast) = Assembly.Temp_Hex((Hashtbl.find static (self#get_id_ast ast)))
         method get_temp_address = Assembly.Hex(0x00)
         method leave =
             nextChild <- 0;

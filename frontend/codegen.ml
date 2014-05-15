@@ -428,7 +428,8 @@ let rec string_of_hex_list hex_list =
     | Hex x :: xs when x >= 0xF -> "" ^ string_of_int x ^ " " ^ string_of_hex_list xs
     (* and this is the one character *)
     | Hex x :: xs -> "0" ^ string_of_int x ^ " " ^ string_of_hex_list xs
-    | Temp_Hex x :: xs -> string_of_hex_list (Hex !x :: xs)
+    | Temp_Hex x :: xs ->
+        string_of_hex_list (Hex !x :: xs)
 let rec string_of_assembly_list assembly_list =
     let string_of_instruction instruction = match instruction with
         | LDA x -> "LDA " ^ string_of_value x
