@@ -134,8 +134,33 @@ let assembly_list_of_ast ast st =
                 Reserved;
             ]
         | Ast.Var_Decl (x, y, _) -> []
-        | Ast.While_Statement (x, y, _) -> raise Not_found
-        | Ast.If_Statement (x, y, _) -> raise Not_found
+        (* Overwrites X, A register *)
+        | Ast.While_Statement (bool_expr, block, pos) ->
+            let compare = func ~register:x bool_expr in
+            let stmts = func block in
+            compare @ [
+                CPX(Hex(true_address)); Reserved; Reserved;
+                (* + 5 for the unconditional jump *)
+                BNE(Hex((List.length stmts) + 5)); Reserved
+            ]
+            @ stmts
+            (* load true for an unconditional jump to the top of the while *)
+            @ func ~register:x (Ast.True pos)
+            @ [
+                CPX(Hex(true_address)); Reserved; Reserved;
+                (* -2 for the CPX + BNE for the loop *)
+                BNE(Hex(max_address - (List.length stmts) - 2 - (List.length compare))); Reserved
+            ]
+
+        (* Overwrites X, A register *)
+        | Ast.If_Statement (bool_expr, block, _) ->
+            let compare = func ~register:x bool_expr in
+            let stmts = func block in
+            compare @ [
+                CPX(Hex(true_address)); Reserved; Reserved;
+                BNE(Hex(List.length stmts)); Reserved
+            ]
+            @ stmts
         | Ast.Id _ ->
             [
                 if
