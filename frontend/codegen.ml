@@ -39,6 +39,12 @@ let typeof ast st = match ast with
 
 let assembly_list_of_ast ast st =
     let memory = Array.make max_address BRK in
+    let heap = Array.make max_address BRK in
+    let heap_pointer = ref max_address in
+    let push_heap item =
+        Array.set heap !heap_pointer item;
+        heap_pointer := !heap_pointer - 1
+    in
     (*
      * NOTE
      *
