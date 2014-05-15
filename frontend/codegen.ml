@@ -357,13 +357,18 @@ let assembly_list_of_ast ast st =
             ] @ [Reserved; Reserved]
         | Ast.Char_List (xs, _) ->
             [
-                LDA(Memory_address(st#get_address ast));
-                Reserved; Reserved;
-                LDY(Memory_address(st#get_address ast));
-                Reserved; Reserved;
-                LDX(Memory_address(st#get_address ast));
-                Reserved; Reserved;
-            ]
+                if
+                    register = a
+                then
+                    LDA(Memory_address(st#get_address ast))
+                else begin
+                    if register = x
+                    then
+                        LDX(Memory_address(st#get_address ast))
+                    else
+                        LDY(Memory_address(st#get_address ast))
+                end
+            ] @ [Reserved; Reserved]
         | _ -> raise Not_found
     in
     List.iteri (fun i x -> Array.set memory i x) (func ast);
