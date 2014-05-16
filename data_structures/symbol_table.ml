@@ -131,7 +131,19 @@ class symboltable =
                 | Scope (_, _, x) -> x
                 | Global (_, _) -> raise CannotExitGlobalScope
             in
-            current_scope <- parent_scope
+            current_scope <- parent_scope;
+            let table = match !current_scope with
+                | Scope (table, _, _) -> table
+                | Global (table, _) -> table
+            in
+            let rec recur scope =
+                match scope with
+                    | Global (table, _) -> [ref table]
+                    | Scope (table, _, parent) -> ref table :: (recur !parent)
+            in
+            let parent_scopes = recur !current_scope in
+            (* Add the new scope! *)
+            symbol_tables <- (symbol_tables @ [ref table :: parent_scopes]);
         method add id _type = match id with
             | Cst.Id (x, pos) -> !(self#get_current_table)#add x {typeof=_type; is_assigned=false; is_used=false; pos=pos}
             | _ -> raise IncorrectCSTElementsInSymbolTableError
