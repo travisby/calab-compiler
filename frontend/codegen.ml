@@ -145,15 +145,18 @@ let assembly_list_of_ast ast st =
             let compare = func ~register:x bool_expr in
             let stmts = func block in
             compare @ [
-                CPX(Hex(true_address)); Reserved; Reserved;
+                LDA(Constant(Hex(true_address))); Reserved;
+                STA(st#get_temp_address); Reserved; Reserved;
+                CPX(st#get_temp_address); Reserved; Reserved;
                 (* + 5 for the unconditional jump *)
                 BNE(Hex((List.length stmts) + 5)); Reserved
             ]
             @ stmts
-            (* load true for an unconditional jump to the top of the while *)
+            (* unconditional jump to the top comparison *)
             @ func ~register:x (Ast.True pos)
             @ [
-                CPX(Hex(true_address)); Reserved; Reserved;
+                LDX(Memory_address(st#get_temp_address)); Reserved; Reserved;
+                CPX((st#get_temp_address)); Reserved; Reserved;
                 (* -2 for the CPX + BNE for the loop *)
                 BNE(Hex(max_address - (List.length stmts) - 2 - (List.length compare))); Reserved
             ]
@@ -163,7 +166,9 @@ let assembly_list_of_ast ast st =
             let compare = func ~register:x bool_expr in
             let stmts = func block in
             compare @ [
-                CPX(Hex(true_address)); Reserved; Reserved;
+                LDA(Constant(Hex(true_address))); Reserved;
+                STA(st#get_temp_address); Reserved; Reserved;
+                CPX(st#get_temp_address); Reserved; Reserved;
                 BNE(Hex(List.length stmts)); Reserved
             ]
             @ stmts
