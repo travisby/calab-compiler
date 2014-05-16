@@ -56,11 +56,12 @@ type scope =
 class symboltable =
     (* A function that takes the unit () as its only parameter *)
     let scope_constructor parent = Scope (new table, [||], parent) in
-    let scope_init = Global (new table, [||]) in
+    let global_table = ref (new table) in
+    let scope_init = Global (!global_table, [||]) in
     object (self)
         val mutable head = ref scope_init
         val mutable current_scope = ref scope_init
-        val mutable nextChild = -1
+        val mutable symbol_tables = [[global_table]]
         (* not proud of this...
          * if there are any bugs, this is probably the first place to look
          * 5 = true \0
@@ -70,6 +71,7 @@ class symboltable =
         val mutable static_pointer = 0
         val heap = Hashtbl.create 2
         val static = Hashtbl.create 0
+        val mutable visiting_node = 0
         method sizeof_static = Hashtbl.length static
         (* add start to every value *)
         method update_static_addresses start =
@@ -99,16 +101,9 @@ class symboltable =
         method get_address (ast : Ast.ast) = Assembly.Temp_Hex((Hashtbl.find static (self#get_id_ast ast)))
         method get_temp_address = Assembly.Hex(0x00)
         method leave =
-            nextChild <- 0;
-            self#exit;
+            ()
         method visit =
-            let xs = match !current_scope with
-                | Scope (_, xs, _) -> xs
-                | Global (_, xs) -> xs
-            in
-            current_scope <- ref (Array.get xs nextChild);
-            nextChild <- nextChild + 1
-
+            visiting_node <- visiting_node + 1
         method enter =
             (*
              * We seem (because we actually aren't) to be abusing let..in
@@ -118,22 +113,25 @@ class symboltable =
              * order the execution of statements
              *)
             let new_scope = ref (scope_constructor current_scope) in
-            let scope_array = match !current_scope with
-                | Scope (_, xs, _) -> xs
-                | Global (_, xs) -> xs
+            let table = match !new_scope with
+                | Scope (table, _, _) -> table
+                | Global (table, _) -> table
             in
+            let rec recur scope =
+                match scope with
+                    | Global (table, _) -> [ref table]
+                    | Scope (table, _, parent) -> ref table :: (recur !parent)
+            in
+            let parent_scopes = recur !current_scope in
             (* Add the new scope! *)
-            let _ = Array.append scope_array [|!new_scope|] in
-            let _ = current_scope <- new_scope in
-            ()
+            symbol_tables <- (symbol_tables @ [ref table :: parent_scopes]);
+            current_scope <- new_scope
         method exit =
             let parent_scope = match !current_scope with
                 | Scope (_, _, x) -> x
                 | Global (_, _) -> raise CannotExitGlobalScope
             in
-            let _ = current_scope <- parent_scope in
-            ()
-
+            current_scope <- parent_scope
         method add id _type = match id with
             | Cst.Id (x, pos) -> !(self#get_current_table)#add x {typeof=_type; is_assigned=false; is_used=false; pos=pos}
             | _ -> raise IncorrectCSTElementsInSymbolTableError
@@ -173,7 +171,13 @@ class symboltable =
                     ref ((self#get_symbol_table !temp_scope_pointer)#get x)
             | _ -> raise IncorrectCSTElementsInSymbolTableError
         method private get_id_ast id = match id with
-            | Ast.Id (x, y) -> self#get_id (Cst.Id (x, y))
+            | Ast.Id (x, y) ->
+                    print_endline "Trying to get containing tables";
+                    print_endline ("For.... " ^ string_of_int (visiting_node));
+                    let containing_tables = List.filter (fun table -> !table#mem x) (List.nth symbol_tables visiting_node) in
+                    print_endline "got containing tables";
+                    let table_we_want = List.hd (containing_tables) in
+                    !table_we_want#get x
             | _ -> raise IncorrectCSTElementsInSymbolTableError
         method assign id = match id with
             | Cst.Id (x, _) ->
