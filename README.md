@@ -9,6 +9,8 @@ You cannot have a loop as the first action of a program.
 We use Mem[0x00] for temporary variables, and a while()
 at the top of the file will need to reuse Mem[0x00]
 
+Variables with the same name.  Please, just don't try to have two a's.  You'll only be hurting yourself (and my grade)
+
 Dependencies
 ------------
 
