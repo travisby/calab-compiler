@@ -189,9 +189,9 @@ let assembly_list_of_ast ast st =
         ]
         | Ast.Addition (digit, expr, _) ->
                 (* NOTICE: WIPES A REGISTER *)
-                (func ~register:a digit)
+                (func ~register:a expr)
                 @ [STA(st#get_temp_address); Reserved; Reserved]
-                @ (func ~register: a expr)
+                @ (func ~register:a digit)
                 @ [ADC(st#get_temp_address); Reserved; Reserved]
                 @ if
                     register = a
