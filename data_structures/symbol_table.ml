@@ -92,7 +92,7 @@ class symboltable =
                 Hashtbl.add heap str pseudo_heap_pointer;
                 false
             end
-        method get_heap_address (str : string) = Hashtbl.find heap str
+        method get_heap_address (str : string) = (Hashtbl.find heap str) + 1
         method private get_current_table = match !current_scope with
                 | Scope (t, _, _) -> ref t
                 | Global (t, _) -> ref t

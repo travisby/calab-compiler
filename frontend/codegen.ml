@@ -366,7 +366,7 @@ let assembly_list_of_ast ast st =
              *)
             let str = (String.concat "" (List.map (fun x -> Char.escaped (to_char x)) xs)) in
             if
-                st#is_in_heap str
+                not (st#is_in_heap str)
             then begin
                 (* null *)
                 push_heap(Data(Hex(0x00)));
