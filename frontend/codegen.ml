@@ -180,9 +180,9 @@ let assembly_list_of_ast ast st =
                     if
                         register = x
                     then
-                        LDY(Memory_address(st#get_address ast))
-                    else(* register = y *)
                         LDX(Memory_address(st#get_address ast))
+                    else(* register = y *)
+                        LDY(Memory_address(st#get_address ast))
                 end;
                 Reserved;
                 Reserved;
