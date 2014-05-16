@@ -149,7 +149,7 @@ let assembly_list_of_ast ast st =
                 STA(st#get_temp_address); Reserved; Reserved;
                 CPX(st#get_temp_address); Reserved; Reserved;
                 (* + 5 for the unconditional jump *)
-                BNE(Hex((List.length stmts) + 5)); Reserved
+                BNE(Hex((List.length stmts) + 8)); Reserved
             ]
             @ stmts
             (* unconditional jump to the top comparison *)
