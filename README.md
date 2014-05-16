@@ -3,6 +3,12 @@ calab-compiler
 
 The (o)Ca(mal) Lab(ouseur) Compiler to compile Alan's custom language to alan6502 Op Codes
 
+Known Bugs
+----------
+You cannot have a loop as the first action of a program.  
+We use Mem[0x00] for temporary variables, and a while()
+at the top of the file will need to reuse Mem[0x00]
+
 Dependencies
 ------------
 

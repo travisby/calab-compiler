@@ -153,12 +153,10 @@ let assembly_list_of_ast ast st =
             ]
             @ stmts
             (* unconditional jump to the top comparison *)
-            @ func ~register:x (Ast.True pos)
             @ [
-                LDX(Memory_address(st#get_temp_address)); Reserved; Reserved;
-                CPX((st#get_temp_address)); Reserved; Reserved;
-                (* -2 for the CPX + BNE for the loop *)
-                BNE(Hex(max_address - (List.length stmts) - 2 - (List.length compare))); Reserved
+                LDX(Memory_address(Hex(true_address + 1))); Reserved; Reserved;
+                CPX((Hex(true_address))); Reserved; Reserved;
+                BNE(Hex(0xFF - 1 - 6 - (List.length stmts) - 10 - (List.length compare))); Reserved
             ]
 
         (* Overwrites X, A register *)

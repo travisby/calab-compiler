@@ -1,0 +1,7 @@
+{
+    int a
+    a = 3
+    while (3 == 3) {
+        print("goto while")
+    }
+}$
