@@ -48,19 +48,19 @@ class ['a, 'b] table =
  * We will be appending to the array to "add" new scopes
  *)
 type scope =
-    | Global of (char, st_entree) table * scope array
+    | Global of (char, st_entree) table * scope list ref
     (* The last parameter is the parent scope *)
-    | Scope of (char, st_entree) table * scope array * scope ref
+    | Scope of (char, st_entree) table * scope list ref * scope ref
 ;;
 
 class symboltable =
     (* A function that takes the unit () as its only parameter *)
-    let scope_constructor parent = Scope (new table, [||], parent) in
-    let scope_init = Global (new table, [||]) in
+    let scope_constructor parent = Scope (new table, ref [], parent) in
+    let scope_init = Global (new table, ref []) in
     object (self)
         val mutable head = ref scope_init
         val mutable current_scope = ref scope_init
-        val mutable nextChild = -1
+        val mutable nextChild = 0
         (* not proud of this...
          * if there are any bugs, this is probably the first place to look
          * 5 = true \0
@@ -106,7 +106,9 @@ class symboltable =
                 | Scope (_, xs, _) -> xs
                 | Global (_, xs) -> xs
             in
-            current_scope <- ref (Array.get xs nextChild);
+            print_endline ("Using child...." ^ (string_of_int nextChild));
+            print_endline ("Size... " ^ (string_of_int (List.length !xs)));
+            current_scope <- ref (List.nth !xs nextChild);
             nextChild <- nextChild + 1
 
         method enter =
@@ -123,9 +125,8 @@ class symboltable =
                 | Global (_, xs) -> xs
             in
             (* Add the new scope! *)
-            let _ = Array.append scope_array [|!new_scope|] in
-            let _ = current_scope <- new_scope in
-            ()
+            scope_array := (!scope_array @ [!new_scope]);
+            current_scope <- new_scope
         method exit =
             let parent_scope = match !current_scope with
                 | Scope (_, _, x) -> x
