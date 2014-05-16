@@ -1,0 +1,11 @@
+{
+    print((3 == 3))
+    if (3 == 3) {
+        print(true)
+    }
+
+    print ((3 != 4))
+    if (3 != 4) {
+        print(false)
+    }
+}$
