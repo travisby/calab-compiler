@@ -254,7 +254,7 @@ let assembly_list_of_ast ast st =
                     Reserved
                 ]
                 (* If we are false, skip over... "temp = true" *)
-                @ [BNE(Hex(1)); Reserved]
+                @ [BNE(Hex(2)); Reserved]
                 (* If we are true, do "~register = true" *)
                 @ [
                     if
@@ -296,7 +296,7 @@ let assembly_list_of_ast ast st =
                     Reserved
                 ]
                 (* If we are false, skip over... "temp = false" *)
-                @ [BNE(Hex(1)); Reserved]
+                @ [BNE(Hex(2)); Reserved]
                 (* If we are true, do "~register = false" *)
                 @ [
                     if
@@ -465,7 +465,7 @@ let rec assemble assembly_list =
         | NOP -> [Hex 0xEA]
         | BRK -> [Hex 0x00]
         | CPX x -> [Hex 0xEC; x] @ (if needs_zero(x) then [Hex 0x00] else [])
-        | BNE x -> [Hex 0xD0; x] @ (if needs_zero(x) then [Hex 0x00] else [])
+        | BNE x -> [Hex 0xD0; x]
         | INC x -> [Hex 0xEE; x] @ (if needs_zero(x) then [Hex 0x00] else [])
         | SYS -> [Hex 0xFF]
         | Data x -> [x]
