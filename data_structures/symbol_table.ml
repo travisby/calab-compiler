@@ -75,10 +75,7 @@ class symboltable =
         method sizeof_static = Hashtbl.length static
         (* add start to every value *)
         method update_static_addresses start =
-            print_endline ("UPDATING STATIC TO... " ^ (string_of_int start));
-            Hashtbl.iter (fun key value -> print_endline (string_of_int !value)) static;
             Hashtbl.iter (fun key value -> value := (start + !value)) static;
-            Hashtbl.iter (fun key value -> print_endline (string_of_int !value)) static;
         method reserve_static_space ast =
             Hashtbl.add static (self#get_id_ast ast) (ref static_pointer);
             static_pointer <- static_pointer + 1;
@@ -98,7 +95,9 @@ class symboltable =
         method private get_current_table = match !current_scope with
                 | Scope (t, _, _) -> ref t
                 | Global (t, _) -> ref t
-        method get_address (ast : Ast.ast) = Assembly.Temp_Hex((Hashtbl.find static (self#get_id_ast ast)))
+        method get_address (ast : Ast.ast) =
+            let res = Assembly.Temp_Hex((Hashtbl.find static (self#get_id_ast ast))) in
+            res
         method get_temp_address = Assembly.Hex(0x00)
         method leave =
             ()
@@ -184,12 +183,19 @@ class symboltable =
             | _ -> raise IncorrectCSTElementsInSymbolTableError
         method private get_id_ast id = match id with
             | Ast.Id (x, y) ->
-                    print_endline "Trying to get containing tables";
-                    print_endline ("For.... " ^ string_of_int (visiting_node));
-                    let containing_tables = List.filter (fun table -> !table#mem x) (List.nth symbol_tables visiting_node) in
-                    print_endline "got containing tables";
-                    let table_we_want = List.hd (containing_tables) in
-                    !table_we_want#get x
+                    let keys_and_table_product =
+                        let rec range i j = if i > j then [] else i :: (range (i+1) j) in
+                        List.flatten
+                            (
+                                List.map
+                                    (fun st -> List.map (fun v -> ((x, v), st)) (List.rev (range 0 visiting_node)))
+                                    (List.nth symbol_tables visiting_node)
+                        )
+                    in
+                    let containing_tables = (List.filter (fun ((k,j), table) -> !table#mem x) keys_and_table_product) in
+                    let key,table = List.hd (containing_tables) in
+                    let res = (x, fst(key)) in
+                    res
             | _ -> raise IncorrectCSTElementsInSymbolTableError
         method assign id = match id with
             | Cst.Id (x, _) ->
